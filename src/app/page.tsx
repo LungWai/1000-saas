@@ -25,8 +25,8 @@ export default function Home() {
 
       const formattedGrids = data.grids.map((grid: any) => ({
         id: grid.id,
-        status: grid.customerId ? 'leased' : 'empty',
-        price: PRICING.BASE_PRICE,
+        status: grid.status === 'active' ? 'leased' : 'empty',
+        price: grid.price || PRICING.BASE_PRICE,
         imageUrl: grid.image_url,
         title: grid.title,
         description: grid.description,

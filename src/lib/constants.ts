@@ -12,15 +12,19 @@ export const GRID_CONFIG = {
 } as const;
 
 export const PRICING = {
-  BASE_PRICE: 10, // Base price per month in USD
-  QUARTERLY_DISCOUNT: 0.05, // 5% discount for quarterly billing
-  YEARLY_DISCOUNT: 0.10, // 10% discount for yearly billing
+  BASE_PRICE: 10.00,
   CURRENCY: 'usd',
-  BILLING_CYCLES: {
-    MONTHLY: 'monthly',
-    QUARTERLY: 'quarterly',
-    YEARLY: 'yearly'
-  }
+} as const;
+
+export const CONTENT_LIMITS = {
+  TEXT: {
+    TITLE_MAX_LENGTH: 50,
+    DESCRIPTION_MAX_LENGTH: 250,
+  },
+  IMAGE: {
+    MAX_SIZE_BYTES: 2 * 1024 * 1024, // 2MB
+    MAX_SIZE_MB: 2,
+  },
 } as const;
 
 export const API_ROUTES = {
@@ -38,16 +42,5 @@ export const API_ROUTES = {
   },
   WEBHOOKS: {
     STRIPE: '/api/webhooks/stripe',
-  },
-} as const;
-
-export const CONTENT_LIMITS = {
-  IMAGE: {
-    MAX_SIZE: 2 * 1024 * 1024, // 2MB
-    FORMATS: ['image/jpeg', 'image/png', 'image/gif'],
-  },
-  TEXT: {
-    TITLE_MAX_LENGTH: 50,
-    DESCRIPTION_MAX_LENGTH: 250,
   },
 } as const; 
