@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { stripe, createCustomer, getStripeSession } from '@/lib/stripe';
 import { createGrid } from '@/lib/db';
-import { captureException } from '@/lib/sentry';
 import { PRICING } from '@/lib/constants';
 
 const subscribeSchema = z.object({
@@ -64,6 +63,8 @@ export async function POST(request: Request) {
       sessionUrl: session.url,
     });
   } catch (error) {
+    console.error('Error in /api/grids/subscribe:', error);
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
@@ -71,7 +72,6 @@ export async function POST(request: Request) {
       );
     }
 
-    captureException(error as Error);
     return NextResponse.json(
       { error: 'Failed to create subscription' },
       { status: 500 }

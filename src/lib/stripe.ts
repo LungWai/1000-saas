@@ -16,8 +16,8 @@ export const getStripeSession = async (priceId: string, customerId: string, grid
         quantity: 1,
       },
     ],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/grid/${gridId}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/grid/${gridId}`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}&grid_id=${gridId}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/error?error=${encodeURIComponent('Payment was cancelled')}`,
     metadata: {
       gridId,
     },
@@ -31,5 +31,15 @@ export const createCustomer = async (email: string) => {
     email,
   });
 
+  return customer;
+};
+
+export const getSubscription = async (subscriptionId: string) => {
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  return subscription;
+};
+
+export const getCustomer = async (customerId: string) => {
+  const customer = await stripe.customers.retrieve(customerId);
   return customer;
 }; 

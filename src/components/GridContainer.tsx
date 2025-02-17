@@ -3,10 +3,15 @@ import { GridContainerProps, GridProps } from '@/types';
 import GridItem from './GridItem';
 import { GRID_CONFIG } from '@/lib/constants';
 
-const GridContainer: React.FC<GridContainerProps> = ({
+interface ExtendedGridContainerProps extends GridContainerProps {
+  onPurchaseClick: (gridId: string) => void;
+}
+
+const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   grids,
   containerSize = GRID_CONFIG.TOTAL_GRIDS,
   columns = GRID_CONFIG.BREAKPOINTS.lg.columns,
+  onPurchaseClick,
 }) => {
   const [hoveredGrid, setHoveredGrid] = useState<string | null>(null);
 
@@ -34,6 +39,7 @@ const GridContainer: React.FC<GridContainerProps> = ({
             isHovered={hoveredGrid === grid.id}
             onMouseEnter={() => setHoveredGrid(grid.id)}
             onMouseLeave={() => setHoveredGrid(null)}
+            onPurchaseClick={() => onPurchaseClick(grid.id)}
           />
         );
       })}

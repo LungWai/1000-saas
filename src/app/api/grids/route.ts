@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getGrids } from '@/lib/db';
-import { captureException } from '@/lib/sentry';
 
 export async function GET(request: Request) {
   try {
@@ -18,7 +17,7 @@ export async function GET(request: Request) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error in /api/grids:', error);
     return NextResponse.json(
       { error: 'Failed to fetch grids' },
       { status: 500 }

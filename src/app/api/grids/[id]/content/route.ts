@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { updateGridContent } from '@/lib/db';
-import { captureException } from '@/lib/sentry';
 import { CONTENT_LIMITS } from '@/lib/constants';
 import { z } from 'zod';
 import { stripe } from '@/lib/stripe';
@@ -47,6 +46,8 @@ export async function PUT(
 
     return NextResponse.json(updatedGrid);
   } catch (error) {
+    console.error('Error in /api/grids/[id]/content:', error);
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
@@ -54,7 +55,6 @@ export async function PUT(
       );
     }
 
-    captureException(error as Error);
     return NextResponse.json(
       { error: 'Failed to update grid content' },
       { status: 500 }

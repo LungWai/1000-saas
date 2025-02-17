@@ -1,6 +1,24 @@
 import { supabase } from './supabase';
 import { Grid, User, Subscription } from '@/types';
-import { captureException } from './sentry';
+
+// Mock data for frontend development
+const mockGrids: Grid[] = Array.from({ length: 1000 }, (_, index) => ({
+  id: index + 1,
+  content: null,
+  customerId: null,
+  url: null,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  user_id: '',
+  image_url: '',
+  title: '',
+  description: '',
+  external_url: '',
+  start_date: new Date(),
+  end_date: new Date(),
+  status: 'pending',
+  subscription_id: '',
+}));
 
 export const getGrids = async (page = 1, limit = 50) => {
   try {
@@ -13,7 +31,7 @@ export const getGrids = async (page = 1, limit = 50) => {
 
     return { grids: data as Grid[], total: count || 0 };
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error fetching grids:', error);
     throw error;
   }
 };
@@ -30,7 +48,7 @@ export const getGridById = async (id: string) => {
 
     return data as Grid;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error fetching grid:', error);
     throw error;
   }
 };
@@ -53,7 +71,7 @@ export const updateGridContent = async (
 
     return data as Grid;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error updating grid content:', error);
     throw error;
   }
 };
@@ -70,7 +88,7 @@ export const createGrid = async (grid: Omit<Grid, 'id' | 'created_at' | 'updated
 
     return data as Grid;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error creating grid:', error);
     throw error;
   }
 };
@@ -87,7 +105,7 @@ export const getUserByEmail = async (email: string) => {
 
     return data as User;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error fetching user:', error);
     throw error;
   }
 };
@@ -104,7 +122,7 @@ export const createUser = async (user: Omit<User, 'id' | 'created_at'>) => {
 
     return data as User;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error creating user:', error);
     throw error;
   }
 };
@@ -121,7 +139,7 @@ export const getGridBySubscription = async (subscriptionId: string) => {
 
     return data as Grid;
   } catch (error) {
-    captureException(error as Error);
+    console.error('Error fetching grid by subscription:', error);
     throw error;
   }
 }; 

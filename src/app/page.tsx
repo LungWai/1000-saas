@@ -1,17 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GridProps } from '@/types';
 import GridContainer from '@/components/GridContainer';
 import { GRID_CONFIG, PRICING } from '@/lib/constants';
 
 export default function Home() {
   const [grids, setGrids] = useState<GridProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePurchaseClick = async (gridId: string) => {
-    // TODO: Implement purchase flow
-    console.log('Purchase clicked for grid:', gridId);
+  useEffect(() => {
+    fetchGrids();
+  }, []);
+
+  const fetchGrids = async () => {
+    try {
+      const response = await fetch('/api/grids');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch grids');
+      }
+
+      const formattedGrids = data.grids.map((grid: any) => ({
+        id: grid.id,
+        status: grid.customerId ? 'leased' : 'empty',
+        price: PRICING.BASE_PRICE,
+        imageUrl: grid.image_url,
+        title: grid.title,
+        description: grid.description,
+        externalUrl: grid.external_url,
+      }));
+
+      setGrids(formattedGrids);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load grids');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handlePurchaseClick = (gridId: string) => {
+    // This will be handled by the PurchaseModal component
+    console.log('Grid clicked:', gridId);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
@@ -29,6 +78,7 @@ export default function Home() {
           grids={grids}
           containerSize={GRID_CONFIG.TOTAL_GRIDS}
           columns={GRID_CONFIG.BREAKPOINTS.lg.columns}
+          onPurchaseClick={handlePurchaseClick}
         />
       </div>
 
