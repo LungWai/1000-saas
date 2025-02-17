@@ -12,7 +12,9 @@ export const GRID_CONFIG = {
 } as const;
 
 export const PRICING = {
-  BASE_PRICE: 99, // in USD
+  BASE_PRICE: 10, // Base price per month in USD
+  QUARTERLY_DISCOUNT: 0.05, // 5% discount for quarterly billing
+  YEARLY_DISCOUNT: 0.10, // 10% discount for yearly billing
   CURRENCY: 'usd',
   BILLING_CYCLES: {
     MONTHLY: 'monthly',

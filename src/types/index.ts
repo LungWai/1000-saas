@@ -1,6 +1,11 @@
 export interface Grid {
-  id: string;
-  user_id: string;
+  id: number;
+  content: string | null;
+  customerId: string | null;
+  url: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user_id: string;          // Now stores Stripe customer ID
   image_url: string;
   title: string;
   description: string;
@@ -9,8 +14,6 @@ export interface Grid {
   end_date: Date;
   status: 'active' | 'inactive' | 'pending';
   subscription_id: string;
-  created_at: Date;
-  updated_at: Date;
 }
 
 export interface User {
@@ -24,7 +27,6 @@ export interface User {
 export interface Subscription {
   id: string;
   grid_id: string;
-  user_id: string;
   amount: number;
   billing_cycle: 'monthly' | 'quarterly' | 'yearly';
   stripe_subscription_id: string;
@@ -51,11 +53,11 @@ export interface GridHoverOverlayProps {
 }
 
 export interface PurchaseModalProps {
-  gridId: string;
+  gridId: number;
   price: number;
   isOpen: boolean;
   onClose: () => void;
-  onCheckout: () => Promise<void>;
+  onCheckout?: () => void;
 }
 
 export interface GridContainerProps {
