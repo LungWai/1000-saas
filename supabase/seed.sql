@@ -12,17 +12,32 @@ BEGIN
             description,
             content,
             price,
-            status
+            status,
+            user_id
         ) VALUES (
             'Grid ' || i,
             'Available grid space ' || i,
             '{}',
             10.00,  -- Default price from PRICING.BASE_PRICE
-            'pending'
+            'pending',
+            '00000000-0000-0000-0000-000000000000'  -- Placeholder admin user ID
         );
     END LOOP;
 END;
 $$;
+
+-- Create admin user if not exists
+INSERT INTO public.users (
+    id,
+    email,
+    subscription_status,
+    role
+) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    'admin@example.com',
+    'active',
+    'admin'
+) ON CONFLICT (id) DO NOTHING;
 
 -- Clear existing grids if any
 TRUNCATE public.grids CASCADE;
