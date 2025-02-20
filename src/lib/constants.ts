@@ -7,7 +7,7 @@ export const GRID_CONFIG = {
     xl: { columns: 40, size: '70px' }
   },
   HOVER_ANIMATION_DURATION: '200ms',
-  HOVER_SCALE: 1.1,
+  HOVER_SCALE: 1.2,
   EMPTY_GRID_COLOR: '#f0f0f0'
 } as const;
 

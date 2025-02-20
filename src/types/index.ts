@@ -1,5 +1,5 @@
 export interface Grid {
-  id: number;
+  id: string;
   content: string | null;
   customerId: string | null;
   url: string | null;
@@ -53,7 +53,7 @@ export interface GridHoverOverlayProps {
 }
 
 export interface PurchaseModalProps {
-  gridId: number;
+  gridId: string;
   price: number;
   isOpen: boolean;
   onClose: () => void;

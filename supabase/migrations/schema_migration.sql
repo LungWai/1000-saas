@@ -19,7 +19,7 @@ create table public.grids (
     description text,
     content jsonb not null default '{}',
     price numeric(10,2) not null default 10.00,
-    status text check (status in ('available', 'reserved', 'purchased')) not null default 'available',
+    status text check (status in ('active', 'inactive', 'pending')) not null default 'active',
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -29,6 +29,9 @@ create table public.subscriptions (
     id text primary key,
     user_id uuid references public.users(id) on delete cascade not null,
     grid_id uuid references public.grids(id) on delete cascade not null,
+    amount numeric(10,2) not null,
+    billing_cycle text check (billing_cycle in ('monthly', 'quarterly', 'yearly')) not null default 'monthly',
+    next_billing_date timestamp with time zone not null,
     status text check (status in ('active', 'inactive', 'trialing', 'past_due', 'canceled', 'unpaid')) not null default 'inactive',
     current_period_start timestamp with time zone not null,
     current_period_end timestamp with time zone not null,
@@ -71,7 +74,7 @@ create policy "Users can update own data"
 -- Grids policies
 create policy "Anyone can view available grids"
     on public.grids for select
-    using (status = 'available');
+    using (status = 'active');
 
 create policy "Users can view their purchased grids"
     on public.grids for select
