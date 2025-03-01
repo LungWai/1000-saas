@@ -117,7 +117,7 @@ export default function Home() {
               setLoading(true);
               fetchGrids();
             }}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 transition-colors"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
           >
             Try Again
           </button>

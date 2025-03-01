@@ -17,7 +17,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
 
   return (
     <button
-      className="edit-grid-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors duration-200"
+      className="edit-grid-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 hover:text-white text-white px-3 py-1 rounded-md text-sm transition-colors duration-200"
       onClick={() => onEditClick(gridId)}
       aria-label="Edit grid content"
     >
