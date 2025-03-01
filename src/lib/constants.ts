@@ -1,15 +1,16 @@
 export const GRID_CONFIG = {
   TOTAL_GRIDS: 1000,
   BREAKPOINTS: {
-    sm: { columns: 10, size: '40px' },
-    md: { columns: 20, size: '40px' },
-    lg: { columns: 25, size: '40px' },
-    xl: { columns: 40, size: '40px' }
+    sm: { columns: 8, size: '150px' },
+    md: { columns: 12, size: '150px' },
+    lg: { columns: 20, size: '150px' },
+    xl: { columns: 24, size: '150px' }
   },
-  HOVER_ANIMATION_DURATION: '200ms',
-  HOVER_SCALE: 1.1,
-  EMPTY_GRID_COLOR: 'white',
-  GRID_BORDER: '1px solid black'
+  HOVER_ANIMATION_DURATION: '300ms',
+  HOVER_SCALE: 3,
+  EMPTY_GRID_COLOR: '#f5f5f5',
+  GRID_BORDER: '1px solid #e0e0e0',
+  HOVER_Z_INDEX: 50
 } as const;
 
 export const PRICING = {
@@ -44,4 +45,16 @@ export const API_ROUTES = {
   WEBHOOKS: {
     STRIPE: '/api/webhooks/stripe',
   },
+} as const;
+
+export const COMPANY_INFO = {
+  NAME: 'GridSpace',
+  LOGO: '/logo-placeholder.svg',
+  CONTACT_EMAIL: 'hello@gridspace.io',
+  CONTACT_PHONE: '+1 (800) 123-4567',
+  SOCIAL: {
+    TWITTER: 'https://twitter.com/gridspace',
+    FACEBOOK: 'https://facebook.com/gridspace',
+    INSTAGRAM: 'https://instagram.com/gridspace',
+  }
 } as const; 

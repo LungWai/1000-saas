@@ -8,17 +8,19 @@ const GridHoverOverlay: React.FC<GridHoverOverlayProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center text-white p-2">
-      <p className="text-lg font-bold">${price}/month</p>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onPurchaseClick();
-        }}
-        className="mt-2 px-3 py-1 bg-white text-black text-sm font-medium rounded-full hover:bg-gray-100 transition-colors"
-      >
-        Lease This Grid
-      </button>
+    <div className="absolute inset-0 bg-gradient-to-b from-white/80 to-white/90 flex flex-col items-center justify-center p-2 border border-gray-200 shadow-md overflow-hidden">
+      <div className="flex flex-col items-center">
+        <p className="text-sm font-semibold text-gray-800 mb-2">${price}<span className="text-xs font-normal text-gray-600">/month</span></p>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onPurchaseClick();
+          }}
+          className="px-3 py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors shadow-sm"
+        >
+          Lease Grid
+        </button>
+      </div>
     </div>
   );
 };

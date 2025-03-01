@@ -5,17 +5,73 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: #000000;
+  --border: #e5e7eb;
+  --muted: #f3f4f6;
 }
 
+/* Override dark mode preferences */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
+    --accent: #000000;
+    --border: #e5e7eb;
+    --muted: #f3f4f6;
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Grid container styles */
+.grid-container {
+  position: relative;
+  margin: 0 auto;
+  width: fit-content;
+  overflow: visible;
+}
+
+.grid-container > div {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), z-index 0ms;
+  transform-origin: center;
+  position: relative;
+}
+
+.grid-container > div:hover {
+  z-index: 50;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), z-index 0ms;
+}
+
+/* Ensure grid items have proper spacing */
+.grid-container > div {
+  margin: 1px;
+}
+
+/* Ensure grid borders are visible */
+.grid-container > div > div {
+  border: 1px solid var(--border) !important;
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
 }

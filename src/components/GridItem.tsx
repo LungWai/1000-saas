@@ -1,11 +1,13 @@
 import { GridProps } from '@/types';
 import GridHoverOverlay from './GridHoverOverlay';
 import { GRID_CONFIG } from '@/lib/constants';
+import { CSSProperties } from 'react';
 
 interface ExtendedGridProps extends GridProps {
   isHovered: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  style?: CSSProperties;
 }
 
 const GridItem: React.FC<ExtendedGridProps> = ({
@@ -20,14 +22,21 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   isHovered,
   onMouseEnter,
   onMouseLeave,
+  style = {},
 }) => {
   const isEmpty = status === 'empty';
   
   return (
     <div
-      className={`relative aspect-square transition-transform duration-${GRID_CONFIG.HOVER_ANIMATION_DURATION} ${
-        isHovered ? `scale-${GRID_CONFIG.HOVER_SCALE} z-10` : ''
+      className={`relative transition-all duration-${GRID_CONFIG.HOVER_ANIMATION_DURATION} ${
+        isHovered ? `z-[${GRID_CONFIG.HOVER_Z_INDEX}]` : 'z-0'
       }`}
+      style={{
+        transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
+        width: GRID_CONFIG.BREAKPOINTS.lg.size,
+        height: GRID_CONFIG.BREAKPOINTS.lg.size,
+        ...style,
+      }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       data-grid-id={id}
@@ -35,12 +44,12 @@ const GridItem: React.FC<ExtendedGridProps> = ({
     >
       <div
         className={`w-full h-full border border-black ${
-          isHovered ? 'shadow-md' : ''
+          isHovered ? 'shadow-lg' : ''
         }`}
         style={{ 
           backgroundColor: GRID_CONFIG.EMPTY_GRID_COLOR,
-          width: GRID_CONFIG.BREAKPOINTS.lg.size,
-          height: GRID_CONFIG.BREAKPOINTS.lg.size
+          width: '100%',
+          height: '100%',
         }}
       >
         {!isEmpty && (
@@ -53,8 +62,8 @@ const GridItem: React.FC<ExtendedGridProps> = ({
               />
             )}
             {title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
-                <p className="text-white text-xs truncate">{title}</p>
+              <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2">
+                <p className="text-black text-xs truncate">{title}</p>
               </div>
             )}
             {externalUrl && (
