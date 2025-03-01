@@ -16,15 +16,41 @@ export default function Home() {
 
   const fetchGrids = async () => {
     try {
-      const response = await fetch('/api/grids');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch grids');
+      let allGrids: any[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      
+      // First request to get total count
+      const initialResponse = await fetch('/api/grids?page=1&limit=200');
+      const initialData = await initialResponse.json();
+      
+      if (!initialResponse.ok) {
+        throw new Error(initialData.error || 'Failed to fetch grids');
+      }
+      
+      allGrids = [...initialData.grids];
+      totalPages = initialData.totalPages;
+      
+      // Fetch remaining pages if needed
+      for (let page = 2; page <= totalPages; page++) {
+        const response = await fetch(`/api/grids?page=${page}&limit=200`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          continue;
+        }
+        
+        allGrids = [...allGrids, ...data.grids];
       }
 
-      const formattedGrids = data.grids.map((grid: any) => ({
-        id: grid.id,
+      if (allGrids.length === 0) {
+        setError('No grid data available. Please check your database connection.');
+        setLoading(false);
+        return;
+      }
+
+      const formattedGrids = allGrids.map((grid: any) => ({
+        id: grid.id.toString(),
         status: grid.status === 'active' ? 'leased' : 'empty',
         price: grid.price || PRICING.BASE_PRICE,
         imageUrl: grid.image_url,
@@ -43,7 +69,6 @@ export default function Home() {
 
   const handlePurchaseClick = (gridId: string) => {
     // This will be handled by the PurchaseModal component
-    console.log('Grid clicked:', gridId);
   };
 
   if (loading) {

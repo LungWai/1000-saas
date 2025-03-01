@@ -7,6 +7,7 @@ CREATE TABLE public.users (
     email TEXT UNIQUE NOT NULL,
     stripe_customer_id TEXT UNIQUE,
     subscription_status TEXT CHECK (subscription_status IN ('active', 'inactive', 'trialing', 'past_due', 'canceled', 'unpaid')) NOT NULL DEFAULT 'inactive',
+    role TEXT CHECK (role IN ('user', 'admin')) NOT NULL DEFAULT 'user',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
@@ -17,9 +18,13 @@ CREATE TABLE public.grids (
     subscription_id TEXT UNIQUE,
     title TEXT NOT NULL CHECK (char_length(title) <= 50),
     description TEXT CHECK (char_length(description) <= 250),
+    image_url TEXT,
+    external_url TEXT,
     content JSONB NOT NULL DEFAULT '{}',
     price NUMERIC(10,2) NOT NULL DEFAULT 10.00,
     status TEXT CHECK (status IN ('active', 'inactive', 'pending')) NOT NULL DEFAULT 'pending',
+    start_date TIMESTAMP WITH TIME ZONE,
+    end_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
@@ -88,17 +93,10 @@ CREATE POLICY "Users can update own profile"
     WITH CHECK (auth.uid() = id);
 
 -- Grids policies
-CREATE POLICY "Public grids are viewable by everyone"
+-- Allow public viewing of all grids without authentication
+CREATE POLICY "All grids are viewable by everyone"
     ON public.grids FOR SELECT
-    USING (status = 'active');
-
-CREATE POLICY "Users can view their purchased grids"
-    ON public.grids FOR SELECT
-    USING (user_id = auth.uid());
-
-CREATE POLICY "Users can update their purchased grids"
-    ON public.grids FOR UPDATE
-    USING (user_id = auth.uid());
+    USING (true);
 
 -- Subscriptions policies
 CREATE POLICY "Users can view own subscriptions"
@@ -121,18 +119,8 @@ CREATE POLICY "Anyone can view grid images"
     ON storage.objects FOR SELECT
     USING (bucket_id = 'grid-images');
 
-CREATE POLICY "Users can upload grid images if they have an active subscription"
-    ON storage.objects FOR INSERT
-    WITH CHECK (
-        bucket_id = 'grid-images'
-        AND EXISTS (
-            SELECT 1 FROM public.subscriptions
-            WHERE user_id = auth.uid()
-            AND status = 'active'
-        )
-    );
-
 -- Helper functions
+-- Function to get grid by subscription ID
 CREATE OR REPLACE FUNCTION public.get_grid_by_subscription(subscription_id TEXT)
 RETURNS SETOF public.grids
 LANGUAGE sql
@@ -141,4 +129,71 @@ AS $$
     SELECT g.*
     FROM public.grids g
     WHERE g.subscription_id = subscription_id;
+$$;
+
+-- Function to verify edit access using subscription ID and email
+CREATE OR REPLACE FUNCTION public.verify_grid_edit_access(
+    p_subscription_id TEXT,
+    p_email TEXT,
+    p_grid_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_valid BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.subscriptions s
+        JOIN public.users u ON s.user_id = u.id
+        JOIN public.grids g ON s.grid_id = g.id
+        WHERE s.id = p_subscription_id
+        AND u.email = p_email
+        AND g.id = p_grid_id
+        AND s.status IN ('active', 'trialing')
+    ) INTO v_valid;
+    
+    RETURN v_valid;
+END;
+$$;
+
+-- Function to update grid content with verification
+CREATE OR REPLACE FUNCTION public.update_grid_content(
+    p_subscription_id TEXT,
+    p_email TEXT,
+    p_grid_id UUID,
+    p_title TEXT,
+    p_description TEXT,
+    p_external_url TEXT,
+    p_image_url TEXT
+)
+RETURNS SETOF public.grids
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_has_access BOOLEAN;
+BEGIN
+    -- Verify access
+    SELECT public.verify_grid_edit_access(p_subscription_id, p_email, p_grid_id) INTO v_has_access;
+    
+    IF v_has_access THEN
+        -- Update grid content
+        UPDATE public.grids
+        SET 
+            title = COALESCE(p_title, title),
+            description = COALESCE(p_description, description),
+            external_url = COALESCE(p_external_url, external_url),
+            image_url = COALESCE(p_image_url, image_url),
+            updated_at = TIMEZONE('utc', NOW())
+        WHERE id = p_grid_id;
+        
+        -- Return updated grid
+        RETURN QUERY SELECT * FROM public.grids WHERE id = p_grid_id;
+    ELSE
+        RAISE EXCEPTION 'Invalid access credentials';
+    END IF;
+END;
 $$; 

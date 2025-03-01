@@ -20,14 +20,16 @@ const mockGrids: Grid[] = Array.from({ length: 1000 }, (_, index) => ({
   subscription_id: '',
 }));
 
-export const getGrids = async (page = 1, limit = 50) => {
+export const getGrids = async (page = 1, limit = 200) => {
   try {
     const { data, error, count } = await supabase
       .from('grids')
       .select('*', { count: 'exact' })
       .range((page - 1) * limit, page * limit - 1);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     return { grids: data as Grid[], total: count || 0 };
   } catch (error) {

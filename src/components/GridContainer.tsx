@@ -17,16 +17,17 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
 
   const gridStyles = {
     display: 'grid',
-    gridTemplateColumns: `repeat(${columns}, minmax(60px, 1fr))`,
-    gap: '4px',
+    gridTemplateColumns: `repeat(${columns}, ${GRID_CONFIG.BREAKPOINTS.lg.size})`,
+    gap: '2px',
     padding: '20px',
     maxWidth: '100vw',
+    justifyContent: 'center',
   };
 
   return (
     <div style={gridStyles} className="grid-container">
       {Array.from({ length: containerSize }, (_, index) => {
-        const grid = grids.find((g) => g.id === `grid-${index}`) || {
+        const grid = index < grids.length ? grids[index] : {
           id: `grid-${index}`,
           status: 'empty',
           price: 99,

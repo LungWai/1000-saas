@@ -2,13 +2,14 @@ export const GRID_CONFIG = {
   TOTAL_GRIDS: 1000,
   BREAKPOINTS: {
     sm: { columns: 10, size: '40px' },
-    md: { columns: 20, size: '50px' },
-    lg: { columns: 25, size: '60px' },
-    xl: { columns: 40, size: '70px' }
+    md: { columns: 20, size: '40px' },
+    lg: { columns: 25, size: '40px' },
+    xl: { columns: 40, size: '40px' }
   },
   HOVER_ANIMATION_DURATION: '200ms',
-  HOVER_SCALE: 1.2,
-  EMPTY_GRID_COLOR: '#f0f0f0'
+  HOVER_SCALE: 1.1,
+  EMPTY_GRID_COLOR: 'white',
+  GRID_BORDER: '1px solid black'
 } as const;
 
 export const PRICING = {

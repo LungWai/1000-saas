@@ -11,6 +11,8 @@ BEGIN
             title,
             description,
             content,
+            image_url,
+            external_url,
             price,
             status,
             user_id
@@ -18,7 +20,9 @@ BEGIN
             'Grid ' || i,
             'Available grid space ' || i,
             '{}',
-            10.00,  -- Default price from PRICING.BASE_PRICE
+            NULL,  -- No image initially
+            NULL,  -- No external URL initially
+            10.00,  -- Default price
             'pending',
             '00000000-0000-0000-0000-000000000000'  -- Placeholder admin user ID
         );

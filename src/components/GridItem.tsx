@@ -22,21 +22,26 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   onMouseLeave,
 }) => {
   const isEmpty = status === 'empty';
-
+  
   return (
     <div
-      className={`relative aspect-square transition-transform duration-200 ${
-        isHovered ? 'scale-110 z-10' : ''
+      className={`relative aspect-square transition-transform duration-${GRID_CONFIG.HOVER_ANIMATION_DURATION} ${
+        isHovered ? `scale-${GRID_CONFIG.HOVER_SCALE} z-10` : ''
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      data-grid-id={id}
+      data-grid-status={status}
     >
       <div
-        className={`w-full h-full ${
-          isEmpty
-            ? 'bg-gray-100 border border-gray-200'
-            : 'bg-white shadow-sm'
+        className={`w-full h-full border border-black ${
+          isHovered ? 'shadow-md' : ''
         }`}
+        style={{ 
+          backgroundColor: GRID_CONFIG.EMPTY_GRID_COLOR,
+          width: GRID_CONFIG.BREAKPOINTS.lg.size,
+          height: GRID_CONFIG.BREAKPOINTS.lg.size
+        }}
       >
         {!isEmpty && (
           <>
