@@ -1,0 +1,39 @@
+# Large generated files
+*.min.js
+*.min.css
+*.bundle.js
+
+# Generated code
+**/generated/
+**/dist/
+**/build/
+
+# Binary and media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.pdf
+*.woff
+*.woff2
+*.eot
+*.ttf
+
+# Data files
+*.csv
+*.json
+*.xml
+*.yaml
+*.yml
+
+# Temporary files
+**/tmp/
+**/temp/
+
+# Documentation
+**/docs/
+**/instruction/
+README.md
+product-details.md
+LICENSE 

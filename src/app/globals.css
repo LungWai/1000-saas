@@ -48,6 +48,9 @@
   width: 100% !important;
   z-index: 50 !important;
   padding: 0 4px !important;
+  transform-origin: bottom !important;
+  pointer-events: auto !important;
+  user-select: none !important;
 }
 
 .grid-hover-price {
@@ -80,6 +83,9 @@
   line-height: 1 !important;
   height: 10px !important;
   min-width: 20px !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s ease-in-out !important;
+  pointer-events: auto !important;
 }
 
 .grid-hover-button:hover {

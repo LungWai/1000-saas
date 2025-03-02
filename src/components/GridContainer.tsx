@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { GridContainerProps, GridProps } from '@/types';
 import GridItem from './GridItem';
-import { GRID_CONFIG } from '@/lib/constants';
+import { GRID_CONFIG, PRICING } from '@/lib/constants';
+import PurchaseModal from './PurchaseModal';
+
+interface ExpandedGridState {
+  id: string;
+  centerX: number;
+  centerY: number;
+  size: number;
+}
 
 interface ExtendedGridContainerProps extends GridContainerProps {
   onPurchaseClick: (gridId: string) => void;
@@ -13,11 +21,14 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   columns = GRID_CONFIG.BREAKPOINTS.lg.columns,
   onPurchaseClick,
 }) => {
-  const [hoveredGrid, setHoveredGrid] = useState<string | null>(null);
+  const [expandedGrid, setExpandedGrid] = useState<ExpandedGridState | null>(null);
   const [dynamicColumns, setDynamicColumns] = useState(columns);
   const [visibleGrids, setVisibleGrids] = useState(containerSize);
   const containerRef = useRef<HTMLDivElement>(null);
   const [gridPositions, setGridPositions] = useState<Map<string, { row: number, col: number }>>(new Map());
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [selectedGridId, setSelectedGridId] = useState<string | null>(null);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   // Adjust grid layout based on viewport size
   useEffect(() => {
@@ -54,18 +65,18 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     };
   }, [containerSize]);
 
-  // Calculate grid positions for perimeter detection
+  // Update grid positions when columns or visible grids change
   useEffect(() => {
-    const positions = new Map<string, { row: number, col: number }>();
+    const newPositions = new Map<string, { row: number, col: number }>();
     
     for (let i = 0; i < visibleGrids; i++) {
+      const gridId = i < grids.length ? grids[i].id : `grid-${i}`;
       const row = Math.floor(i / dynamicColumns);
       const col = i % dynamicColumns;
-      const gridId = i < grids.length ? grids[i].id : `grid-${i}`;
-      positions.set(gridId, { row, col });
+      newPositions.set(gridId, { row, col });
     }
     
-    setGridPositions(positions);
+    setGridPositions(newPositions);
   }, [dynamicColumns, visibleGrids, grids]);
 
   // Determine if a grid is on the perimeter
@@ -107,6 +118,76 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     return 'center';
   };
 
+  const isWithinExpandedArea = (mouseX: number, mouseY: number): boolean => {
+    if (!expandedGrid) return true; // If no expanded grid, allow hover
+
+    const dx = mouseX - expandedGrid.centerX;
+    const dy = mouseY - expandedGrid.centerY;
+    const radius = expandedGrid.size / 2;
+
+    // Check if point is within the expanded square area
+    return Math.abs(dx) <= radius && Math.abs(dy) <= radius;
+  };
+
+  useEffect(() => {
+    if (!expandedGrid) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isWithinExpandedArea(e.clientX, e.clientY)) {
+        setExpandedGrid(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [expandedGrid]);
+
+  // New function to handle hover state changes from GridItems
+  const handleGridHoverStateChange = (gridId: string, isHovered: boolean, element?: HTMLElement) => {
+    if (isHovered && element) {
+      // Only update expandedGrid state when a grid becomes hovered
+      const rect = element.getBoundingClientRect();
+      const size = rect.width * GRID_CONFIG.HOVER_SCALE;
+      
+      setExpandedGrid({
+        id: gridId,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+        size: size,
+      });
+    } else if (!isHovered && expandedGrid?.id === gridId) {
+      // Only clear expandedGrid if the grid that's no longer hovered is the currently expanded one
+      setExpandedGrid(null);
+    }
+  };
+
+  const handlePurchaseClick = async (gridId: string) => {
+    setSelectedGridId(gridId);
+    setIsPurchaseModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsPurchaseModalOpen(false);
+    setSelectedGridId(null);
+    setIsLoading(null);
+  };
+
+  const getTransformOriginForGrid = (gridId: string) => {
+    const direction = getHoverDirection(gridId);
+    
+    switch (direction) {
+      case 'top-left': return 'bottom right';
+      case 'top-right': return 'bottom left';
+      case 'bottom-left': return 'top right';
+      case 'bottom-right': return 'top left';
+      case 'top': return 'bottom center';
+      case 'bottom': return 'top center';
+      case 'left': return 'center right';
+      case 'right': return 'center left';
+      default: return 'center';
+    }
+  };
+
   const gridStyles = {
     display: 'grid',
     gridTemplateColumns: `repeat(${dynamicColumns}, ${GRID_CONFIG.BREAKPOINTS.lg.size})`,
@@ -119,47 +200,37 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   };
 
   return (
-    <div style={gridStyles} className="grid-container" ref={containerRef}>
-      {Array.from({ length: visibleGrids }, (_, index) => {
-        const grid = index < grids.length ? grids[index] : {
-          id: `grid-${index}`,
-          status: 'empty',
-          price: 99,
-        } as GridProps;
+    <>
+      <div style={gridStyles} className="grid-container" ref={containerRef}>
+        {Array.from({ length: visibleGrids }, (_, index) => {
+          const grid = index < grids.length ? grids[index] : {
+            id: `grid-${index}`,
+            status: 'empty',
+            price: 99,
+          } as GridProps;
 
-        const isHovered = hoveredGrid === grid.id;
-        const direction = getHoverDirection(grid.id);
-        
-        // Apply transform origin based on grid position
-        const getTransformOrigin = () => {
-          switch (direction) {
-            case 'top-left': return 'bottom right';
-            case 'top-right': return 'bottom left';
-            case 'bottom-left': return 'top right';
-            case 'bottom-right': return 'top left';
-            case 'top': return 'bottom center';
-            case 'bottom': return 'top center';
-            case 'left': return 'center right';
-            case 'right': return 'center left';
-            default: return 'center';
-          }
-        };
+          return (
+            <GridItem
+              key={grid.id}
+              {...grid}
+              isLoading={isLoading === grid.id}
+              onHoverStateChange={handleGridHoverStateChange}
+              getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
+              onPurchaseClick={handlePurchaseClick}
+            />
+          );
+        })}
+      </div>
 
-        return (
-          <GridItem
-            key={grid.id}
-            {...grid}
-            isHovered={isHovered}
-            onMouseEnter={() => setHoveredGrid(grid.id)}
-            onMouseLeave={() => setHoveredGrid(null)}
-            onPurchaseClick={() => onPurchaseClick(grid.id)}
-            style={{
-              transformOrigin: isPerimeterGrid(grid.id) ? getTransformOrigin() : 'center',
-            }}
-          />
-        );
-      })}
-    </div>
+      {selectedGridId && (
+        <PurchaseModal
+          gridId={selectedGridId}
+          price={PRICING.BASE_PRICE}
+          isOpen={isPurchaseModalOpen}
+          onClose={handleModalClose}
+        />
+      )}
+    </>
   );
 };
 
