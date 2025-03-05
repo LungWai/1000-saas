@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
-import { updateGridContent } from '@/lib/db';
+import { updateGridUrl } from '@/lib/db';
 import { z } from 'zod';
 import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
 
-const urlSchema = z.object({
-  external_url: z.string().url().startsWith('https://', { message: 'URL must start with https://' }),
+const updateSchema = z.object({
+  external_url: z.string().url(),
   subscriptionId: z.string(),
   email: z.string().email(),
 });
+
+// Add type guard for customer
+const isCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.DeletedCustomer>): customer is Stripe.Response<Stripe.Customer> => {
+  return !('deleted' in customer);
+};
 
 export async function PUT(
   request: Request,
@@ -15,7 +21,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { subscriptionId, email, external_url } = urlSchema.parse(body);
+    const { subscriptionId, email, external_url } = updateSchema.parse(body);
 
     // Verify subscription
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -28,6 +34,14 @@ export async function PUT(
 
     // Verify email matches customer
     const customer = await stripe.customers.retrieve(subscription.customer as string);
+
+    if (!isCustomer(customer)) {
+      return NextResponse.json(
+        { error: 'Customer not found or deleted' },
+        { status: 404 }
+      );
+    }
+
     if (customer.email !== email) {
       return NextResponse.json(
         { error: 'Email does not match subscription' },
@@ -35,10 +49,10 @@ export async function PUT(
       );
     }
 
-    const updatedGrid = await updateGridContent(
+    const updatedGrid = await updateGridUrl(
       params.id,
       subscription.customer as string,
-      { external_url }
+      external_url
     );
 
     return NextResponse.json(updatedGrid);
@@ -47,7 +61,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid URL format', details: error.errors },
+        { error: 'Invalid input', details: error.errors },
         { status: 400 }
       );
     }

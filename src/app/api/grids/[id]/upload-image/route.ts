@@ -4,7 +4,7 @@ import { optimizeImage, generateThumbnail } from '@/lib/image-optimizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB

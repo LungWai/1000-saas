@@ -3,6 +3,7 @@ import { updateGridContent } from '@/lib/db';
 import { CONTENT_LIMITS } from '@/lib/constants';
 import { z } from 'zod';
 import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
 
 const updateSchema = z.object({
   title: z.string().max(CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH).optional(),
@@ -11,6 +12,11 @@ const updateSchema = z.object({
   subscriptionId: z.string(),
   email: z.string().email(),
 });
+
+// Add type guard
+const isCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.DeletedCustomer>): customer is Stripe.Response<Stripe.Customer> => {
+  return !('deleted' in customer);
+};
 
 export async function PUT(
   request: Request,
@@ -31,6 +37,14 @@ export async function PUT(
 
     // Verify email matches customer
     const customer = await stripe.customers.retrieve(subscription.customer as string);
+
+    if (!isCustomer(customer)) {
+      return NextResponse.json(
+        { error: 'Customer not found or deleted' },
+        { status: 404 }
+      );
+    }
+
     if (customer.email !== email) {
       return NextResponse.json(
         { error: 'Email does not match subscription' },

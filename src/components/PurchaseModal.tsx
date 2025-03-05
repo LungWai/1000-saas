@@ -1,3 +1,6 @@
+"use client"
+
+import type React from 'react';
 import { useState } from 'react';
 import { PurchaseModalProps } from '@/types';
 import { PRICING } from '@/lib/constants';

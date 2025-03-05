@@ -6,6 +6,17 @@ import GridContainer from '@/components/GridContainer';
 import { GRID_CONFIG, PRICING, COMPANY_INFO } from '@/lib/constants';
 import Image from 'next/image';
 
+// Add type for API response at the top with other imports
+interface GridResponse {
+  id: string;
+  status: 'active' | 'inactive' | 'pending';
+  price: number;
+  image_url?: string;
+  title?: string;
+  description?: string;
+  external_url?: string;
+}
+
 export default function Home() {
   const [grids, setGrids] = useState<GridProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +44,7 @@ export default function Home() {
 
   const fetchGrids = async () => {
     try {
-      let allGrids: any[] = [];
+      let allGrids: GridResponse[] = [];
       let currentPage = 1;
       let totalPages = 1;
       
@@ -66,14 +77,15 @@ export default function Home() {
         return;
       }
 
-      const formattedGrids = allGrids.map((grid: any) => ({
+      const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => ({
         id: grid.id.toString(),
         status: grid.status === 'active' ? 'leased' : 'empty',
-        price: grid.price || PRICING.BASE_PRICE,
+        price: typeof grid.price === 'number' ? grid.price : PRICING.BASE_PRICE,
         imageUrl: grid.image_url,
         title: grid.title,
         description: grid.description,
         externalUrl: grid.external_url,
+        onPurchaseClick: () => handlePurchaseClick(grid.id.toString())
       }));
 
       setGrids(formattedGrids);

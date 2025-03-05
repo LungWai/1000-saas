@@ -3,7 +3,7 @@ import { Grid, User, Subscription } from '@/types';
 
 // Mock data for frontend development
 const mockGrids: Grid[] = Array.from({ length: 1000 }, (_, index) => ({
-  id: index + 1,
+  id: (index + 1).toString(),
   content: null,
   customerId: null,
   url: null,
@@ -142,6 +142,31 @@ export const getGridBySubscription = async (subscriptionId: string) => {
     return data as Grid;
   } catch (error) {
     console.error('Error fetching grid by subscription:', error);
+    throw error;
+  }
+};
+
+export const updateGridUrl = async (
+  id: string,
+  customerId: string,
+  external_url: string
+) => {
+  try {
+    const { data, error } = await supabase
+      .from('grids')
+      .update({ 
+        external_url,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('customer_id', customerId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating grid URL:', error);
     throw error;
   }
 }; 

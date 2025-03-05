@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EditAccess } from '@/types';
+import { z } from 'zod';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(request: Request) {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     // Verify subscription exists and is active
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
-      .select('id, status, grid_id')
+      .select('id, status, grid_id, user_id')
       .eq('id', subscriptionId)
       .single();
 
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error verifying access:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to verify access' },
       { status: 500 }
     );
   }

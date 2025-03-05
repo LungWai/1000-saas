@@ -3,6 +3,12 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { updateGridContent, getGridById } from '@/lib/db';
 import { sendPurchaseConfirmation } from '@/lib/resend';
+import Stripe from 'stripe';
+
+// Add type guard for Stripe Customer
+const isActiveCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.DeletedCustomer>): customer is Stripe.Response<Stripe.Customer> => {
+  return !('deleted' in customer);
+};
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -24,18 +30,39 @@ export async function POST(request: Request) {
 
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object;
+        const session = event.data.object as Stripe.Checkout.Session;
+        
+        // Validate required session data
+        if (!session.metadata?.gridId) {
+          throw new Error('Missing gridId in session metadata');
+        }
+        
+        if (!session.customer) {
+          throw new Error('Missing customer in session');
+        }
+        
+        if (!session.subscription) {
+          throw new Error('Missing subscription in session');
+        }
+
         const gridId = session.metadata.gridId;
         const customerId = session.customer;
         const subscriptionId = session.subscription;
 
-        if (!gridId || !customerId || !subscriptionId) {
-          throw new Error('Missing required metadata');
-        }
-
         // Get subscription details
         const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
         const customer = await stripe.customers.retrieve(customerId as string);
+        
+        // Check if customer is active
+        if (!isActiveCustomer(customer)) {
+          throw new Error('Customer not found or deleted');
+        }
+
+        // Check if customer has email
+        if (!customer.email) {
+          throw new Error('Customer email not found');
+        }
+
         const grid = await getGridById(gridId);
 
         if (!grid) {
@@ -59,7 +86,7 @@ export async function POST(request: Request) {
 
         // Send confirmation email
         await sendPurchaseConfirmation({
-          email: customer.email!,
+          email: customer.email,
           gridId,
           subscriptionId: subscriptionId as string,
           amount: subscription.items.data[0].price.unit_amount!,

@@ -43,13 +43,13 @@ export interface GridProps {
   title?: string;
   description?: string;
   externalUrl?: string;
-  onPurchaseClick: () => void;
+  onPurchaseClick: (gridId: string) => void;
 }
 
 export interface GridHoverOverlayProps {
   price: number;
   isVisible: boolean;
-  onPurchaseClick: () => void;
+  onPurchaseClick: (gridId: string) => void;
 }
 
 export interface PurchaseModalProps {

@@ -1,3 +1,6 @@
+"use client"
+
+import type React from 'react';
 import { useState } from 'react';
 import { Grid as GridType } from '@/types';
 import PurchaseModal from './PurchaseModal';

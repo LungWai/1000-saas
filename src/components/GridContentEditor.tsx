@@ -1,3 +1,6 @@
+"use client"
+
+import type React from 'react';
 import { useState } from 'react';
 import { Grid, ContentEditorProps } from '@/types';
 import { CONTENT_LIMITS } from '@/lib/constants';

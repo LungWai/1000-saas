@@ -1,3 +1,6 @@
+"use client"
+
+import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { GridContainerProps, GridProps } from '@/types';
 import GridItem from './GridItem';
@@ -123,7 +126,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
 
     const dx = mouseX - expandedGrid.centerX;
     const dy = mouseY - expandedGrid.centerY;
-    const radius = expandedGrid.size / 2;
+    const radius = expandedGrid.size / 2 * 1.2;
 
     // Check if point is within the expanded square area
     return Math.abs(dx) <= radius && Math.abs(dy) <= radius;
@@ -161,9 +164,10 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     }
   };
 
-  const handlePurchaseClick = async (gridId: string) => {
+  const handleGridPurchaseClick = (gridId: string) => {
     setSelectedGridId(gridId);
     setIsPurchaseModalOpen(true);
+    onPurchaseClick(gridId);
   };
 
   const handleModalClose = () => {
@@ -206,7 +210,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
           const grid = index < grids.length ? grids[index] : {
             id: `grid-${index}`,
             status: 'empty',
-            price: 99,
+            price: PRICING.BASE_PRICE,
           } as GridProps;
 
           return (
@@ -216,7 +220,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
               isLoading={isLoading === grid.id}
               onHoverStateChange={handleGridHoverStateChange}
               getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
-              onPurchaseClick={handlePurchaseClick}
+              onPurchaseClick={() => handleGridPurchaseClick(grid.id)}
             />
           );
         })}

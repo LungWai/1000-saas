@@ -48,7 +48,12 @@ export async function POST(request: Request) {
       external_url: '',
       subscription_id: '', // Will be updated after successful payment
       start_date: new Date(),
-      end_date: new Date(), // Will be updated after successful payment
+      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Set end date to 1 month from now
+      content: null,
+      customerId: customer.id,
+      url: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
 
     // Create Stripe checkout session

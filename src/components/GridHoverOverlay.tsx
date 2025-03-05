@@ -1,3 +1,5 @@
+
+import type React from 'react';
 import { GridHoverOverlayProps } from '@/types';
 import { GridProps } from '@/types';
 
@@ -23,7 +25,7 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!isLoading) {
-      onPurchaseClick();
+      onPurchaseClick(id);
     }
   };
   

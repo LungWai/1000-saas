@@ -1,3 +1,6 @@
+"use client"
+
+import type React from 'react';
 import { GridProps } from '@/types';
 import GridHoverOverlay from './GridHoverOverlay';
 import { GRID_CONFIG } from '@/lib/constants';
@@ -30,7 +33,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   const gridRef = useRef<HTMLDivElement>(null);
   
   // Debounce hover events to prevent rapid state changes
-  const HOVER_DEBOUNCE_MS = 50;
+  const HOVER_DEBOUNCE_MS = 150;
 
   const handleMouseEnter = (e: MouseEvent<HTMLDivElement>) => {
     if (hoverTimeoutRef.current) {
