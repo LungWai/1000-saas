@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-};
+  webpack: (config) => {
+    config.infrastructureLogging = {
+      level: 'error'
+    }
+    return config
+  }
+}
 
-module.exports = nextConfig; 
+module.exports = nextConfig 
