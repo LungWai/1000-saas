@@ -24,11 +24,17 @@ interface BackgroundManagerProps {
   children?: ReactNode;
 }
 
+// Probability configuration
+const PROBABILITY = {
+  VIDEO: 0.7,  // 30% chance for video
+  PARTICLES: 0.3  // 70% chance for particles
+};
+
 /**
- * Component that randomly selects between different background types
- * with two-step random logic:
- * 1. First randomly choose between particle or video
- * 2. If video is chosen, randomly select one of the available videos
+ * Component that selects between different background types
+ * with weighted probability:
+ * - 30% chance for particles
+ * - 70% chance for video/image backgrounds
  */
 export default function BackgroundManager({ children }: BackgroundManagerProps) {
   const [backgroundType, setBackgroundType] = useState<string | null>(null);
@@ -37,28 +43,23 @@ export default function BackgroundManager({ children }: BackgroundManagerProps) 
   // Function to trigger a background refresh - using useCallback to maintain reference stability
   const refreshBackground = useCallback(() => {
     console.log("Refresh background triggered");
-    
-    // Force a new selection by incrementing the refresh trigger
-    setRefreshTrigger(prev => prev + 1);
-    
-    // This will trigger the useEffect to run again and select a new background
+    setRefreshTrigger((prev: number) => prev + 1);
   }, []);
   
   useEffect(() => {
     console.log("Effect running with refresh trigger:", refreshTrigger);
     
-    // Available background types
-    const backgroundTypes = ['particles', 'video'];
+    // Generate a random number between 0 and 1
+    const randomValue = Math.random();
     
-    // Step 1: Select a random background type
-    const randomIndex = Math.floor(Math.random() * backgroundTypes.length);
-    const selectedType = backgroundTypes[randomIndex];
+    // If random value is less than VIDEO probability (0.3), choose video, otherwise particles
+    const selectedType = randomValue < PROBABILITY.VIDEO ? 'video' : 'particles';
     
     // Set the selected background type
     setBackgroundType(selectedType);
     
-    // For debugging - log the selected type
-    console.log('Selected background type:', selectedType);
+    // For debugging - log the selected type and probability
+    console.log('Selected background type:', selectedType, '(random value:', randomValue, ')');
     
   }, [refreshTrigger]);
   
