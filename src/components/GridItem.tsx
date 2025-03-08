@@ -99,19 +99,49 @@ const GridItem: React.FC<ExtendedGridProps> = ({
     }, HOVER_DEBOUNCE_MS);
   };
 
+  const handleTouchEnd = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+      if (onHoverStateChange) {
+        onHoverStateChange(id, false);
+      }
+    }, HOVER_DEBOUNCE_MS);
+  };
+
   const transformOrigin = getTransformOrigin ? getTransformOrigin() : 'center center';
 
   return (
     <div
       ref={gridRef}
-      className={`relative transition-all duration-${GRID_CONFIG.HOVER_ANIMATION_DURATION} ${
-        isHovered ? `z-[100]` : 'z-10'
-      }`}
+      className={`
+        relative
+        border
+        border-border
+        overflow-hidden
+        transition-all
+        duration-300
+        ${isHovered ? `z-[100]` : 'z-10'}
+        outline-none
+        focus:ring-2
+        focus:ring-primary
+        focus:ring-offset-2
+        focus:ring-offset-background
+        backdrop-blur-sm
+        bg-card/30
+        rounded-md
+        p-1
+        ${isEmpty ? 'cursor-default bg-muted/20' : 'cursor-pointer hover:shadow-lg'}
+        ${isLoading === id ? 'pointer-events-none' : ''}
+      `}
       style={{
+        aspectRatio: '1 / 1',
+        willChange: 'transform',
         transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
         transformOrigin,
-        width: GRID_CONFIG.BREAKPOINTS.lg.size,
-        height: GRID_CONFIG.BREAKPOINTS.lg.size,
         ...style,
       }}
       onMouseEnter={handleMouseEnter}
@@ -119,9 +149,10 @@ const GridItem: React.FC<ExtendedGridProps> = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       tabIndex={0}
       role="button"
-      aria-pressed={isHovered}
+      aria-label={`Grid ${id}`}
       data-grid-id={id}
       data-grid-status={status}
       data-hovered={isHovered ? "true" : "false"}

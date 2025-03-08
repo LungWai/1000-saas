@@ -9,10 +9,9 @@ import { useTheme } from '@/lib/ThemeProvider';
 export default function PurchaseModal({
   gridId,
   price,
-  isOpen,
   onClose,
   onCheckout,
-}: PurchaseModalProps) {
+}: Omit<PurchaseModalProps, 'isOpen'>) {
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
@@ -25,7 +24,7 @@ export default function PurchaseModal({
     setMounted(true);
   }, []);
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +71,7 @@ export default function PurchaseModal({
   const isDarkMode = theme === 'dark';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
       <div className="bg-card rounded-lg p-6 max-w-md w-full text-foreground">
         <h2 className="text-2xl font-bold mb-4">Lease Grid Space #{gridId}</h2>
         

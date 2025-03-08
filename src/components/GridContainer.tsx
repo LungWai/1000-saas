@@ -204,37 +204,41 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   };
 
   return (
-    <>
-      <div style={gridStyles} className="grid-container" ref={containerRef}>
-        {Array.from({ length: visibleGrids }, (_, index) => {
-          const grid = index < grids.length ? grids[index] : {
-            id: `grid-${index}`,
-            status: 'empty',
-            price: PRICING.BASE_PRICE,
-          } as GridProps;
-
-          return (
-            <GridItem
-              key={grid.id}
-              {...grid}
-              isLoading={isLoading === grid.id}
-              onHoverStateChange={handleGridHoverStateChange}
-              getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
-              onPurchaseClick={() => handleGridPurchaseClick(grid.id)}
-            />
-          );
-        })}
-      </div>
-
-      {selectedGridId && (
+    <div ref={containerRef} className="w-full">
+      {isPurchaseModalOpen && selectedGridId && (
         <PurchaseModal
           gridId={selectedGridId}
-          price={PRICING.BASE_PRICE}
-          isOpen={isPurchaseModalOpen}
           onClose={handleModalClose}
+          price={PRICING.DEFAULT_PRICE}
         />
       )}
-    </>
+      
+      <div 
+        className="grid gap-0.8 w-full mx-1 md:mx-2"
+        style={{
+          gridTemplateColumns: `repeat(${dynamicColumns}, minmax(0, 1fr))`,
+        }}
+      >
+        {grids?.map((grid, index) => (
+          index < visibleGrids && (
+            <GridItem
+              key={grid.id}
+              id={grid.id}
+              status={grid.status}
+              price={grid.price}
+              imageUrl={grid.image_url}
+              title={grid.title}
+              description={grid.description}
+              externalUrl={grid.external_url}
+              onPurchaseClick={() => handleGridPurchaseClick(grid.id)}
+              isLoading={isLoading}
+              getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
+              onHoverStateChange={handleGridHoverStateChange}
+            />
+          )
+        ))}
+      </div>
+    </div>
   );
 };
 
