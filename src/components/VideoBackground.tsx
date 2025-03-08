@@ -9,6 +9,9 @@ export default function VideoBackground() {
   const [videoLoaded, setVideoLoaded] = useState(false);
   
   useEffect(() => {
+    // Reset video loaded state when component mounts/refreshes
+    setVideoLoaded(false);
+    
     // List of available video files
     const videoFiles = [
       'Bg-video-01.mp4',
@@ -48,6 +51,7 @@ export default function VideoBackground() {
       }}
     >
       <video 
+        key={videoFile} // Add key to force re-creation when video changes
         autoPlay 
         loop 
         muted 
@@ -67,8 +71,11 @@ export default function VideoBackground() {
         Your browser does not support the video tag.
       </video>
       {!videoLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center text-foreground">
-          Loading video...
+        <div className="absolute inset-0 flex items-center justify-center text-foreground bg-background/30 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent"></div>
+            <p>Loading video...</p>
+          </div>
         </div>
       )}
     </div>

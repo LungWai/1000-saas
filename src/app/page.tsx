@@ -25,6 +25,15 @@ interface GridResponse {
   external_url?: string;
 }
 
+// Create a wrapper component to ensure context is available
+function BackgroundProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <BackgroundManager>
+      {children}
+    </BackgroundManager>
+  );
+}
+
 export default function Home() {
   const [grids, setGrids] = useState<GridProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,21 +157,18 @@ export default function Home() {
   }
 
   return (
-    <>
-      {/* Random Background (Particles or Video) */}
-      <BackgroundManager />
-      
+    <BackgroundProvider>
       <main className="min-h-screen flex-col text-foreground relative z-10">
         {/* Header */}
-        <header className={`w-full bg-card/20 border-b border-border py-5 backdrop-blur-sm transition-all duration-500 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <header className={`w-full bg-card/20 border-b border-border py-5 backdrop-blur-sm transition-all duration-500 relative z-50 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="max-w-[1200px] w-full mx-auto px-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-8">
                 <Image 
-                  src="/logo.png"
-                  alt="Logo"
-                  width={96}
-                  height={96}
+                  src="/logo.png" 
+                  alt="Logo" 
+                  width={96} 
+                  height={96} 
                   className="h-16 w-auto"
                   priority
                 />
@@ -197,8 +203,8 @@ export default function Home() {
         {/* Hero Section */}
         <section className={`w-full bg-gradient-to-b from-card/40 to-muted/40 py-5 backdrop-blur-sm transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="max-w-[800px] mx-auto px-8 text-center">
-            <h2 className="text-2xl font-bold tracking-tight mb-3"> Discover Your SaaS Space </h2>
-            <p className="text-base text-muted-foreground leading-relaxed max-w-[400px] mx-auto">
+            <h2 className="text-2xl font-bold tracking-tight mb-3 text-foreground"> Discover Your SaaS Space </h2>
+            <p className="text-base text-foreground leading-relaxed max-w-[400px] mx-auto">
               Explore premium digital real estate tailored for SaaS advertising
             </p>
           </div>
@@ -252,18 +258,30 @@ export default function Home() {
         </footer>
       </main>
       <Toaster />
-    </>
+    </BackgroundProvider>
   );
 }
 
 // Refresh Background Button Component
 function RefreshBackgroundButton() {
-  const { refreshBackground } = useBackground();
+  const backgroundContext = useBackground();
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const handleRefresh = () => {
+  const handleRefresh = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Log for debugging
+    console.log("RefreshBackgroundButton: context =", backgroundContext);
+    
+    // Prevent multiple clicks
+    if (isRefreshing) return;
+    
     setIsRefreshing(true);
-    refreshBackground();
+    console.log("Refresh button clicked, current type:", backgroundContext.currentBackgroundType);
+    
+    // Call the refresh function from context
+    backgroundContext.refreshBackground();
     
     // Reset the refreshing state after animation completes
     setTimeout(() => {
@@ -272,15 +290,23 @@ function RefreshBackgroundButton() {
   };
   
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={handleRefresh}
-      className="mr-2"
-      aria-label="Refresh background"
-      title="Refresh background"
-    >
-      <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-    </Button>
+    <div className="relative">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleRefresh}
+        className={`relative ${isRefreshing ? 'bg-primary/20' : ''}`}
+        aria-label="Refresh background"
+        title="Refresh background"
+        disabled={isRefreshing}
+      >
+        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
+      </Button>
+      {isRefreshing && (
+        <span className="absolute top-full left-1/2 transform -translate-x-1/2 text-xs text-primary animate-pulse mt-1">
+          Refreshing...
+        </span>
+      )}
+    </div>
   );
 }
