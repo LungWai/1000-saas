@@ -1,8 +1,9 @@
 "use client"
 
 import type React from 'react';
-import { MouseEvent } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import { GridHoverOverlayProps, GridProps } from '@/types';
+import { useTheme } from '@/lib/ThemeProvider';
 
 interface ExtendedGridHoverOverlayProps extends GridHoverOverlayProps, GridProps {
   isLoading?: boolean;
@@ -20,7 +21,15 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
   isLoading = false,
   onPurchaseClick,
 }) => {
-  if (!isVisible) return null;
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  if (!isVisible || !mounted) return null;
   
   const handleButtonClick = (e: MouseEvent) => {
     e.preventDefault();
@@ -29,6 +38,8 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
       onPurchaseClick(id);
     }
   };
+  
+  const isDarkMode = theme === 'dark';
   
   return (
     <>
@@ -66,7 +77,8 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
           <div style={{ 
             fontSize: '0.16rem',
             padding: '0.5px 1px',
-            background: 'rgba(255, 255, 255, 0.7)',
+            background: isDarkMode ? 'rgba(40, 40, 40, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+            color: isDarkMode ? 'white' : 'black',
             borderRadius: '1px',
           }}>
             {status}
@@ -75,50 +87,50 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
       </div>
       
       {/* Refined bottom legend with price and button - reduced by 15% */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '15px',
-        backgroundColor: 'rgba(255, 255, 255, 0.98)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 3px',
-        zIndex: 50,
-        pointerEvents: 'auto',
-      }}>
+      <div className="grid-hover-overlay">
         {/* Price section with better alignment - reduced by 15% */}
         <div style={{ display: 'flex', alignItems: 'baseline' }}>
-          <span className="grid-hover-price" style={{ fontSize: '0.34rem', fontWeight: 500 }}>${price}</span>
-          <span className="grid-hover-month" style={{ fontSize: '0.25rem', color: '#666', marginLeft: '1px' }}>/month</span>
+          <span className="grid-hover-price" style={{ fontSize: '0.34rem', fontWeight: 500 }}>
+            ${price}
+          </span>
+          <span className="grid-hover-month" style={{ fontSize: '0.25rem', marginLeft: '1px' }}>
+            /month
+          </span>
         </div>
         
         {/* Button with better sizing - reduced by 15% */}
         <button
           onClick={handleButtonClick}
           disabled={isLoading}
+          className="grid-hover-button"
           style={{
-            background: '#000',
-            color: 'white',
             fontSize: '0.25rem',
             padding: '1px 3px',
             borderRadius: '2px',
             height: '10px',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
             border: 'none',
+            minWidth: '24px',
+            fontWeight: 600,
           }}
+          title="Lease this grid space"
         >
           {isLoading ? (
             <div style={{ fontSize: "0.25rem", display: "flex", alignItems: "center" }}>
-              <div style={{ width: "0.17rem", height: "0.17rem", borderTop: "1px solid white", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+              <div style={{ 
+                width: "0.17rem", 
+                height: "0.17rem", 
+                borderTop: `1px solid currentColor`, 
+                borderRadius: "50%", 
+                animation: "spin 1s linear infinite" 
+              }}></div>
               <span style={{ marginLeft: "0.1rem" }}>...</span>
             </div>
           ) : (
-            'Lease Grid'
+            <span style={{ letterSpacing: '0.02rem' }}>Lease Grid</span>
           )}
         </button>
       </div>

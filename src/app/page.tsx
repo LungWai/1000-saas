@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Loader2 } from "lucide-react";
+import ThemeToggle from '@/components/ThemeToggle';
 
 // Add type for API response at the top with other imports
 interface GridResponse {
@@ -113,10 +114,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-          <p className="text-sm text-gray-500">Loading grid spaces...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading grid spaces...</p>
         </div>
       </div>
     );
@@ -124,7 +125,7 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error Loading Data</AlertTitle>
@@ -146,9 +147,9 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex-col bg-white text-black">
+    <main className="min-h-screen flex-col bg-background text-foreground">
       {/* Header */}
-      <header className={`w-full bg-white border-b border-gray-100 py-5 z-40 backdrop-blur-sm bg-white/90 transition-all duration-500 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      <header className={`w-full bg-card/90 border-b border-border py-5 z-40 backdrop-blur-sm transition-all duration-500 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="max-w-[1200px] w-full mx-auto px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
@@ -162,40 +163,43 @@ export default function Home() {
               />
               <h1 className="text-3xl font-medium tracking-tight">1000 SaaS Space</h1>
             </div>
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>About</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="p-4 w-[400px]">
-                      <h4 className="text-sm font-medium leading-none mb-2">About Us</h4>
-                      <p className="text-sm text-gray-500">Your digital real estate marketplace for the future of SaaS.</p>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50" href="#contact">
-                    Contact
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>About</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="p-4 w-[400px]">
+                        <h4 className="text-sm font-medium leading-none mb-2">About Us</h4>
+                        <p className="text-sm text-muted-foreground">Your digital real estate marketplace for the future of SaaS.</p>
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50" href="#contact">
+                      Contact
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className={`w-full bg-gradient-to-b from-white to-gray-50 py-5 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <section className={`w-full bg-gradient-to-b from-card to-muted py-5 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="max-w-[800px] mx-auto px-8 text-center">
           <h2 className="text-2xl font-bold tracking-tight mb-3">Digital Real Estate Marketplace</h2>
-          <p className="text-base text-gray-600 leading-relaxed max-w-[400px] mx-auto">
+          <p className="text-base text-muted-foreground leading-relaxed max-w-[400px] mx-auto">
             Explore curated digital real estate for SaaS advertising
           </p>
         </div>
       </section>
 
       {/* Grid Container */}
-      <section className="w-full overflow-hidden bg-white py-12">
+      <section className="w-full overflow-hidden bg-background py-12">
         <div className="w-full max-w-[1200px] mx-auto px-8">
           <GridContainer
             grids={grids}
@@ -207,36 +211,36 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="w-full bg-white border-t border-gray-100 py-16">
+      <footer id="contact" className="w-full bg-card border-t border-border py-16">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 mb-4">Contact</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Contact</h3>
               <div className="space-y-3">
-                <a href={`mailto:${COMPANY_INFO.CONTACT_EMAIL}`} className="text-sm text-gray-600 hover:text-black transition-colors block">
+                <a href={`mailto:${COMPANY_INFO.CONTACT_EMAIL}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors block">
                   {COMPANY_INFO.CONTACT_EMAIL}
                 </a>
-                <span className="text-sm text-gray-600 block">{COMPANY_INFO.CONTACT_PHONE}</span>
+                <span className="text-sm text-muted-foreground block">{COMPANY_INFO.CONTACT_PHONE}</span>
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 mb-4">Company</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Company</h3>
               <div className="space-y-3">
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors block">About Us</a>
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors block">Terms of Service</a>
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors block">Privacy Policy</a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">About Us</a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">Terms of Service</a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">Privacy Policy</a>
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 mb-4">Social</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Social</h3>
               <div className="space-y-3">
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors block">Twitter</a>
-                <a href="#" className="text-sm text-gray-600 hover:text-black transition-colors block">LinkedIn</a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">Twitter</a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">LinkedIn</a>
               </div>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-gray-100">
-            <span className="text-sm text-gray-400">&copy; {new Date().getFullYear()} {COMPANY_INFO.NAME}. All rights reserved.</span>
+          <div className="mt-12 pt-8 border-t border-border">
+            <span className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {COMPANY_INFO.NAME}. All rights reserved.</span>
           </div>
         </div>
       </footer>
