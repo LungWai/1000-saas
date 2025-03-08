@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Loader2 } from "lucide-react";
 import ThemeToggle from '@/components/ThemeToggle';
+import ParticlesBackground from '@/components/ParticlesBackground';
 
 // Add type for API response at the top with other imports
 interface GridResponse {
@@ -148,6 +149,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex-col bg-background text-foreground">
+      {/* Particles Background */}
+      <ParticlesBackground />
+      
       {/* Header */}
       <header className={`w-full bg-card/90 border-b border-border py-5 z-40 backdrop-blur-sm transition-all duration-500 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="max-w-[1200px] w-full mx-auto px-8">
@@ -191,9 +195,9 @@ export default function Home() {
       {/* Hero Section */}
       <section className={`w-full bg-gradient-to-b from-card to-muted py-5 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="max-w-[800px] mx-auto px-8 text-center">
-          <h2 className="text-2xl font-bold tracking-tight mb-3">Digital Real Estate Marketplace</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-3"> Discover Your SaaS Space </h2>
           <p className="text-base text-muted-foreground leading-relaxed max-w-[400px] mx-auto">
-            Explore curated digital real estate for SaaS advertising
+            Explore premium digital real estate tailored for SaaS advertising
           </p>
         </div>
       </section>
