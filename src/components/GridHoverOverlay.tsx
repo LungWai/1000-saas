@@ -116,7 +116,7 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
             minWidth: '24px',
             fontWeight: 600,
           }}
-          title="Lease this grid space"
+          title={`Lease ${title || `Grid #${id}`}`}
         >
           {isLoading ? (
             <div style={{ fontSize: "0.25rem", display: "flex", alignItems: "center" }}>

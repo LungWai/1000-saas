@@ -58,6 +58,7 @@ export interface PurchaseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCheckout?: () => void;
+  gridTitle?: string;
 }
 
 export interface GridContainerProps {

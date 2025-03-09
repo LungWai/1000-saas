@@ -115,9 +115,13 @@ export default function Home() {
   };
 
   const handlePurchaseClick = (gridId: string) => {
+    // Find the grid by ID to get its title
+    const selectedGrid = grids.find(grid => grid.id === gridId);
+    const gridTitle = selectedGrid?.title || `Grid #${gridId}`;
+    
     toast({
       title: "Grid Selected",
-      description: `You selected grid ${gridId}. Proceeding to purchase...`,
+      description: `You selected ${gridTitle}. Proceeding to purchase...`,
     });
     console.log(`Purchase clicked for grid: ${gridId}`);
   };

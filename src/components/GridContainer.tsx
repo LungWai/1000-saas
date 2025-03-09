@@ -167,6 +167,8 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   const handleGridPurchaseClick = (gridId: string) => {
     setSelectedGridId(gridId);
     setIsPurchaseModalOpen(true);
+    // Clear expanded grid when purchase modal opens
+    setExpandedGrid(null);
     onPurchaseClick(gridId);
   };
 
@@ -210,6 +212,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
           gridId={selectedGridId}
           onClose={handleModalClose}
           price={PRICING.DEFAULT_PRICE}
+          gridTitle={grids?.find(grid => grid.id === selectedGridId)?.title}
         />
       )}
       

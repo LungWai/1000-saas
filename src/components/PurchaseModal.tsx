@@ -11,7 +11,8 @@ export default function PurchaseModal({
   price,
   onClose,
   onCheckout,
-}: Omit<PurchaseModalProps, 'isOpen'>) {
+  gridTitle,
+}: Omit<PurchaseModalProps, 'isOpen'> & { gridTitle?: string }) {
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
@@ -70,10 +71,13 @@ export default function PurchaseModal({
 
   const isDarkMode = theme === 'dark';
 
+  // Display title with fallback to ID
+  const displayTitle = gridTitle || `Grid Space #${gridId}`;
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
       <div className="bg-card rounded-lg p-6 max-w-md w-full text-foreground">
-        <h2 className="text-2xl font-bold mb-4">Lease Grid Space #{gridId}</h2>
+        <h2 className="text-2xl font-bold mb-4">Lease {displayTitle}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
