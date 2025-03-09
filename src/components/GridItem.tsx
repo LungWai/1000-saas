@@ -5,12 +5,14 @@ import { GridProps } from '@/types';
 import GridHoverOverlay from './GridHoverOverlay';
 import { GRID_CONFIG } from '@/lib/constants';
 import { CSSProperties, MouseEvent, useState, useEffect, useRef } from 'react';
+import EditModal from './EditModal';
 
 interface ExtendedGridProps extends GridProps {
   isLoading?: boolean;
   style?: CSSProperties;
   getTransformOrigin?: () => string;
   onHoverStateChange?: (id: string, isHovered: boolean, element?: HTMLElement) => void;
+  content?: string | null;
 }
 
 const GridItem: React.FC<ExtendedGridProps> = ({
@@ -21,6 +23,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   title,
   description,
   externalUrl,
+  content,
   onPurchaseClick,
   isLoading = false,
   style = {},
@@ -28,7 +31,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   onHoverStateChange,
 }) => {
   const isEmpty = status === 'empty';
+  const isLeased = status === 'leased';
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   
@@ -121,101 +126,161 @@ const GridItem: React.FC<ExtendedGridProps> = ({
     }, HOVER_DEBOUNCE_MS);
   };
 
+  const handleGridAction = (gridId: string) => {
+    if (isLeased) {
+      // Open edit modal for leased grids
+      setIsEditModalOpen(true);
+    } else {
+      // Call purchase action for empty grids
+      onPurchaseClick(gridId);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditModalSubmit = async (data: any) => {
+    try {
+      // Submit edit data to server
+      const response = await fetch(`/api/grids/${id}/content`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update grid content');
+      }
+
+      setIsEditModalOpen(false);
+      // Refresh the page to see updated content
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating grid:', error);
+    }
+  };
+
   const transformOrigin = getTransformOrigin ? getTransformOrigin() : 'center center';
 
   return (
-    <div
-      ref={gridRef}
-      className={`
-        relative
-        border
-        border-border
-        overflow-hidden
-        transition-all
-        duration-300
-        ${isHovered ? `z-[100]` : 'z-10'}
-        outline-none
-        focus:ring-2
-        focus:ring-primary
-        focus:ring-offset-2
-        focus:ring-offset-background
-        backdrop-blur-sm
-        bg-card/30
-        rounded-md
-        p-1
-        ${isEmpty ? 'cursor-default bg-muted/20' : 'cursor-pointer hover:shadow-lg'}
-        ${isLoading === id ? 'pointer-events-none' : ''}
-      `}
-      style={{
-        aspectRatio: '1 / 1',
-        willChange: 'transform',
-        transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
-        transformOrigin,
-        ...style,
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      tabIndex={0}
-      role="button"
-      aria-label={`Grid ${id}`}
-      data-grid-id={id}
-      data-grid-status={status}
-      data-hovered={isHovered ? "true" : "false"}
-    >
+    <>
       <div
-        className={`relative w-full h-full border border-gray-300 overflow-hidden ${
-          isHovered ? 'shadow-lg' : ''
-        }`}
-        style={{ 
-          backgroundColor: 'rgba(128, 128, 128, 0.15)',
-          width: '100%',
-          height: '100%',
-          position: 'relative',
+        ref={gridRef}
+        className={`
+          relative
+          border
+          border-border
+          overflow-hidden
+          transition-all
+          duration-300
+          ${isHovered ? `z-[100]` : 'z-10'}
+          outline-none
+          focus:ring-2
+          focus:ring-primary
+          focus:ring-offset-2
+          focus:ring-offset-background
+          backdrop-blur-sm
+          bg-card/30
+          rounded-md
+          p-1
+          ${isEmpty ? 'cursor-default bg-muted/20' : 'cursor-pointer hover:shadow-lg'}
+          ${isLoading === id ? 'pointer-events-none' : ''}
+        `}
+        style={{
+          aspectRatio: '1 / 1',
+          willChange: 'transform',
+          transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
+          transformOrigin,
+          ...style,
         }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        tabIndex={0}
+        role="button"
+        aria-label={`Grid ${id}`}
+        data-grid-id={id}
+        data-grid-status={status}
+        data-hovered={isHovered ? "true" : "false"}
       >
-        {!isEmpty && (
-          <>
-            {imageUrl && (
-              <img
-                src={imageUrl}
-                alt={title || 'Grid content'}
-                className="w-full h-full object-cover"
+        <div
+          className={`relative w-full h-full border border-gray-300 overflow-hidden ${
+            isHovered ? 'shadow-lg' : ''
+          }`}
+          style={{ 
+            backgroundColor: 'rgba(128, 128, 128, 0.15)',
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+          }}
+        >
+          {!isEmpty && (
+            <>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt={title || 'Grid content'}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              )}
+              
+              {/* Only show title in non-hover state if no content or image is present */}
+              {!isHovered && title && (!imageUrl || (!content && !description)) && (
+                <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2 z-20">
+                  <p className="text-black text-xs truncate">{title}</p>
+                </div>
+              )}
+              
+              {externalUrl && (
+                <a
+                  href={externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )}
+            </>
+          )}
+          
+          {/* Show a subtle indicator for leased grids when not hovered */}
+          {isLeased && !isHovered && (
+            <div className="absolute top-0 right-0 z-10 p-0.5">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            </div>
+          )}
+          
+          {/* Render hover overlay directly within the grid */}
+          {isHovered && (
+            <div className="absolute inset-0 z-50">
+              <GridHoverOverlay
+                {...{ id, status, price, imageUrl, title, description, externalUrl, content }}
+                isVisible={true}
+                isLoading={isLoading}
+                onPurchaseClick={handleGridAction}
               />
-            )}
-            {title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2 z-20">
-                <p className="text-black text-xs truncate">{title}</p>
-              </div>
-            )}
-            {externalUrl && (
-              <a
-                href={externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute inset-0"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-          </>
-        )}
-        
-        {/* Render overlay directly within the grid */}
-        {isHovered && (
-          <div className="absolute inset-0 z-50">
-            <GridHoverOverlay
-              {...{ id, status, price, imageUrl, title, description, externalUrl }}
-              isVisible={true}
-              isLoading={isLoading}
-              onPurchaseClick={() => onPurchaseClick(id)}
-            />
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <EditModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onSubmit={handleEditModalSubmit}
+          gridId={id}
+        />
+      )}
+    </>
   );
 };
 

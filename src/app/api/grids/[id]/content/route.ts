@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { updateGridContent } from '@/lib/db';
+import { updateGridContentWithVerification } from '@/lib/db';
 import { CONTENT_LIMITS } from '@/lib/constants';
 import { z } from 'zod';
 import { stripe } from '@/lib/stripe';
@@ -9,6 +9,8 @@ const updateSchema = z.object({
   title: z.string().max(CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH).optional(),
   description: z.string().max(CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH).optional(),
   image_url: z.string().url().optional(),
+  content: z.string().max(CONTENT_LIMITS.TEXT.CONTENT_MAX_LENGTH).optional(),
+  external_url: z.string().url().optional(),
   subscriptionId: z.string(),
   email: z.string().email(),
 });
@@ -52,7 +54,8 @@ export async function PUT(
       );
     }
 
-    const updatedGrid = await updateGridContent(
+    // Use the new function with customer verification
+    const updatedGrid = await updateGridContentWithVerification(
       params.id,
       subscription.customer as string,
       validatedData
@@ -66,6 +69,13 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
         { status: 400 }
+      );
+    }
+
+    if (error instanceof Error && error.message.includes('not owned by this customer')) {
+      return NextResponse.json(
+        { error: 'You do not have permission to edit this grid' },
+        { status: 403 }
       );
     }
 

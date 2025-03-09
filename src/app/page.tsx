@@ -23,6 +23,7 @@ interface GridResponse {
   title?: string;
   description?: string;
   external_url?: string;
+  content?: string | null;
 }
 
 // Create a wrapper component to ensure context is available
@@ -119,6 +120,7 @@ export default function Home() {
         title: grid.title,
         description: grid.description,
         externalUrl: grid.external_url,
+        content: grid.content,
         onPurchaseClick: () => handlePurchaseClick(grid.id.toString())
       }));
 

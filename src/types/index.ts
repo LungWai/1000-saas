@@ -43,6 +43,7 @@ export interface GridProps {
   title?: string;
   description?: string;
   externalUrl?: string;
+  content?: string | null;
   onPurchaseClick: (gridId: string) => void;
 }
 

@@ -1,24 +1,7 @@
 import { supabase } from './supabase';
 import { Grid, User, Subscription } from '@/types';
 
-// Mock data for frontend development
-const mockGrids: Grid[] = Array.from({ length: 1000 }, (_, index) => ({
-  id: (index + 1).toString(),
-  content: null,
-  customerId: null,
-  url: null,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  user_id: '',
-  image_url: '',
-  title: '',
-  description: '',
-  external_url: '',
-  start_date: new Date(),
-  end_date: new Date(),
-  status: 'pending',
-  subscription_id: '',
-}));
+// Remove all mock data - we're using real database data now
 
 export const getGrids = async (page = 1, limit = 200) => {
   try {
@@ -63,7 +46,10 @@ export const updateGridContent = async (
   try {
     const { data, error } = await supabase
       .from('grids')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
@@ -73,6 +59,56 @@ export const updateGridContent = async (
     return data as Grid;
   } catch (error) {
     console.error('Error updating grid content:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update grid content with customer verification
+ * This ensures only the grid owner can update the content
+ */
+export const updateGridContentWithVerification = async (
+  id: string,
+  customerId: string,
+  updates: {
+    title?: string;
+    description?: string;
+    image_url?: string;
+    content?: string | null;
+    external_url?: string;
+  }
+) => {
+  try {
+    // First verify the grid belongs to this customer
+    const { data: gridData, error: gridError } = await supabase
+      .from('grids')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', customerId)
+      .single();
+    
+    if (gridError) {
+      console.error('Grid verification error:', gridError);
+      throw new Error('Grid not found or not owned by this customer');
+    }
+    
+    // Then update the grid
+    const { data, error } = await supabase
+      .from('grids')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', customerId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data as Grid;
+  } catch (error) {
+    console.error('Error updating grid content with verification:', error);
     throw error;
   }
 };

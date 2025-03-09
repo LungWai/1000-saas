@@ -252,10 +252,11 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
               id={grid.id}
               status={grid.status}
               price={grid.price}
-              imageUrl={grid.image_url}
+              imageUrl={grid.imageUrl}
               title={grid.title}
               description={grid.description}
-              externalUrl={grid.external_url}
+              externalUrl={grid.externalUrl}
+              content={grid.content}
               onPurchaseClick={() => handleGridPurchaseClick(grid.id)}
               isLoading={isLoading}
               getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
