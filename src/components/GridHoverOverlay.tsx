@@ -50,21 +50,50 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
   
-  // Handle JSON content if it's a string
-  const parseContent = (contentData: string | null | undefined) => {
-    if (!contentData) return '';
+  // Safely check if content is displayable, returns empty string for invalid content
+  const isValidContent = (contentData: any): boolean => {
+    if (!contentData) return false;
+    
+    // If it's an empty object
+    if (typeof contentData === 'object' && Object.keys(contentData).length === 0) {
+      return false;
+    }
+    
+    // If it's a string representation of an empty object "{}"
+    if (contentData === '{}') return false;
+    
+    return true;
+  };
+  
+  // Parse content safely
+  const getDisplayContent = (contentData: string | null | undefined): string => {
+    if (!isValidContent(contentData)) return '';
+    
+    // If it's already a string, just return it
+    if (typeof contentData === 'string') {
+      try {
+        // Check if it's valid JSON
+        const parsed = JSON.parse(contentData);
+        if (typeof parsed === 'object' && Object.keys(parsed).length === 0) {
+          return '';
+        }
+        return JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        // Not valid JSON, just return the string
+        return contentData;
+      }
+    }
+    
+    // Fallback - try to stringify if it's an object
     try {
-      // If content is JSON, pretty print it
-      const parsed = JSON.parse(contentData);
-      return JSON.stringify(parsed, null, 2);
+      return JSON.stringify(contentData, null, 2);
     } catch (e) {
-      // If not JSON, just return the string
-      return contentData;
+      return '';
     }
   };
   
-  const displayContent = parseContent(content);
-  const hasDisplayableContent = !!displayContent || !!description;
+  const displayContent = getDisplayContent(content);
+  const hasDisplayableContent = !!description;
   
   return (
     <>
@@ -77,21 +106,21 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
         </div>
       </div>
       
-      {/* Content Display for Leased Grids */}
+      {/* Content Display for Leased Grids - Moved to bottom */}
       {isLeased && (
-        <div className="grid-content-container content-fade-in">
-          {/* Description */}
+        <div className="absolute bottom-[0.4rem] left-0 right-0 w-full px-2 content-fade-in pointer-events-none">
+          {/* Description - Moved to bottom */}
           {description && (
-            <div className={`grid-content-title ${
+            <div className={`w-full text-center mb-2 py-1 px-2 text-[0.22rem] font-medium rounded-sm ${
               isDarkMode ? 'bg-black/70 text-white' : 'bg-white/70 text-black'
             }`}>
               {truncateText(description, 30)}
             </div>
           )}
           
-          {/* Content */}
+          {/* Content - only displayed if valid and not empty */}
           {displayContent && (
-            <div className={`grid-content-text grid-hover-content ${
+            <div className={`text-[0.18rem] p-1 rounded-sm max-w-full overflow-hidden ${
               isDarkMode ? 'bg-black/60 text-white' : 'bg-white/60 text-black'
             }`}>
               {truncateText(displayContent, 50)}
@@ -99,8 +128,8 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
           )}
           
           {/* Show placeholder if no content or description */}
-          {!hasDisplayableContent && (
-            <div className={`grid-content-text ${
+          {!hasDisplayableContent && !displayContent && (
+            <div className={`text-center py-1 px-2 text-[0.18rem] rounded-sm ${
               isDarkMode ? 'bg-black/50 text-gray-300' : 'bg-white/50 text-gray-600'
             }`}>
               Add content by clicking "Edit"
@@ -115,7 +144,7 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
       }`} style={{ height: isLeased ? '0.35rem' : '0.4rem' }}>
         {/* Price - only for non-leased grids */}
         {!isLeased && (
-          <div className="flex items-baseline">
+          <div className="flex items-baseline mr-auto">
             <span className="text-[0.28rem] font-medium">
               ${price}
             </span>
@@ -125,13 +154,19 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
           </div>
         )}
         
-        {/* Action Button */}
+        {/* Action Button - moved further to the right corner */}
         <button
           onClick={handleButtonClick}
           disabled={isLoading}
           className={`text-[0.22rem] py-px rounded-sm h-[0.28rem] flex items-center justify-center cursor-pointer border-none font-semibold text-white
-            ${isLeased ? 'bg-green-500 hover:bg-green-600 px-2 ml-auto' : 'bg-blue-500 hover:bg-blue-600 px-1 ml-1'}`}
-          style={{ minWidth: isLeased ? '0.8rem' : '1rem' }}
+            ${isLeased 
+              ? 'bg-green-500 hover:bg-green-600 px-2 mr-0.5' 
+              : 'bg-blue-500 hover:bg-blue-600 px-1 mr-0.5'}`}
+          style={{ 
+            minWidth: isLeased ? '0.8rem' : '1rem',
+            position: 'relative',
+            right: '0.1rem'
+          }}
         >
           {isLoading ? (
             <div className="text-[0.22rem] flex items-center">

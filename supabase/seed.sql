@@ -1,4 +1,4 @@
--- Create a function to generate initial grids
+-- Create a function to generate initial grids with deterministic UUIDs
 CREATE OR REPLACE FUNCTION generate_initial_grids()
 RETURNS void
 LANGUAGE plpgsql
@@ -6,6 +6,9 @@ AS $$
 DECLARE
     i INTEGER;
     grid_price NUMERIC(10,2);
+    grid_uuid UUID;
+    base_uuid VARCHAR := '00000000-0000-0000-0000-';
+    formatted_number VARCHAR;
 BEGIN
     FOR i IN 1..1000 LOOP
         -- Set price based on grid number
@@ -17,7 +20,16 @@ BEGIN
             grid_price := 2.99; -- Last 500 grids (501-1000)
         END IF;
         
+        -- Format the number to ensure lexicographical ordering
+        -- We pad with zeros to ensure proper string comparison
+        formatted_number := LPAD(i::text, 12, '0');
+        
+        -- Create a deterministic UUID where the last part corresponds to the grid number
+        -- This ensures UUIDs will sort in the same order as the grid titles
+        grid_uuid := (base_uuid || formatted_number)::UUID;
+        
         INSERT INTO public.grids (
+            id,
             title,
             description,
             content,
@@ -27,6 +39,7 @@ BEGIN
             status,
             user_id
         ) VALUES (
+            grid_uuid,
             'Grid ' || i,
             'Available grid space ' || i,
             '{}',

@@ -96,20 +96,10 @@ export default function Home() {
         return;
       }
 
-      // Sort grids by title numerically (assuming titles are like "Grid 1", "Grid 2", etc.)
-      // This ensures leased grids stay in their original position
+      // Sort grids by UUID, which ensures consistent order based on the database IDs
       allGrids.sort((a, b) => {
-        // Extract numeric portion from titles
-        const getNumFromTitle = (title: string) => {
-          if (!title) return Infinity; // Put grids without titles at the end
-          const matches = title.match(/\d+/);
-          return matches ? parseInt(matches[0]) : Infinity;
-        };
-        
-        const numA = getNumFromTitle(a.title || '');
-        const numB = getNumFromTitle(b.title || '');
-        
-        return numA - numB;
+        // We're sorting by UUID instead of title numbers
+        return a.id.localeCompare(b.id);
       });
 
       const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => ({

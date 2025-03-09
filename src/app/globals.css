@@ -219,68 +219,39 @@ header, section, footer {
 
 /* Additional grid hover styles for leased grids */
 
-/* Create a new class for content display that doesn't conflict with existing styles */
-.grid-content-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 80%;
-  max-height: 70%;
-  overflow: hidden;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.grid-content-title {
-  font-size: 0.22rem;
-  font-weight: bold;
-  padding: 2px 3px;
-  border-radius: 2px;
-  margin-bottom: 2px;
-  max-width: 100%;
-}
-
-.grid-content-text {
-  font-size: 0.18rem;
-  padding: 2px;
-  border-radius: 2px;
-  max-width: 100%;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* Fix for content overflow */
-.grid-hover-content {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Override problematic styles in grid-hover-overlay */
+/* Updated custom-grid-hover class for better right-corner button positioning */
 .custom-grid-hover {
-  all: initial !important;
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  z-index: 50 !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 2px 4px !important;
-  height: auto !important;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 50;
+  padding: 0.05rem 0.05rem 0.05rem 0.2rem;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
-/* Animations for content transitions */
+/* Remove the grid-content-container styles since we're using absolute positioning */
+.grid-content-container {
+  display: none;
+}
+
+/* Updated content fade-in animation for bottom-positioned description */
 .content-fade-in {
-  animation: fadeIn 0.3s ease-in-out forwards;
+  animation: fadeIn 0.3s ease-in-out;
+  opacity: 1;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 } 

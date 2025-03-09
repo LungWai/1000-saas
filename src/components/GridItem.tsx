@@ -37,6 +37,14 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   
+  // Safety check for content to prevent rendering issues
+  const hasValidContent = (): boolean => {
+    if (!content) return false;
+    if (content === '{}') return false;
+    if (typeof content === 'object' && Object.keys(content).length === 0) return false;
+    return true;
+  };
+  
   // Debounce hover events to prevent rapid state changes
   const HOVER_DEBOUNCE_MS = 150;
 
@@ -232,7 +240,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
               )}
               
               {/* Only show title in non-hover state if no content or image is present */}
-              {!isHovered && title && (!imageUrl || (!content && !description)) && (
+              {!isHovered && title && (!imageUrl || (!hasValidContent() && !description)) && (
                 <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2 z-20">
                   <p className="text-black text-xs truncate">{title}</p>
                 </div>
@@ -261,7 +269,8 @@ const GridItem: React.FC<ExtendedGridProps> = ({
           {isHovered && (
             <div className="absolute inset-0 z-50">
               <GridHoverOverlay
-                {...{ id, status, price, imageUrl, title, description, externalUrl, content }}
+                {...{ id, status, price, imageUrl, title, description, externalUrl }}
+                content={content}
                 isVisible={true}
                 isLoading={isLoading}
                 onPurchaseClick={handleGridAction}
