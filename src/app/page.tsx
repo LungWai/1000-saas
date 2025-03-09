@@ -122,6 +122,8 @@ export default function Home() {
     toast({
       title: "Grid Selected",
       description: `You selected ${gridTitle}. Proceeding to purchase...`,
+      variant: "default",
+      duration: 2300, // Show for 3 seconds
     });
     console.log(`Purchase clicked for grid: ${gridId}`);
   };

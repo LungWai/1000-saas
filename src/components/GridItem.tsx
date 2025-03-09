@@ -36,6 +36,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   const HOVER_DEBOUNCE_MS = 150;
 
   const handleMouseEnter = (e: MouseEvent<HTMLDivElement>) => {
+    // Don't show hover effects if modal is open
+    if (document.body.classList.contains('modal-open')) return;
+    
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -72,6 +75,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
 
   // Handle keyboard focus for accessibility
   const handleFocus = () => {
+    // Don't show hover effects if modal is open
+    if (document.body.classList.contains('modal-open')) return;
+    
     setIsHovered(true);
     if (onHoverStateChange && gridRef.current) {
       onHoverStateChange(id, true, gridRef.current);
@@ -87,6 +93,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
 
   // Handle touch events for mobile
   const handleTouchStart = () => {
+    // Don't show hover effects if modal is open
+    if (document.body.classList.contains('modal-open')) return;
+    
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }

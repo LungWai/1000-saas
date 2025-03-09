@@ -23,6 +23,14 @@ export default function PurchaseModal({
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+    
+    // Add modal-open class to body when modal is mounted
+    document.body.classList.add('modal-open');
+    
+    // Remove modal-open class when component unmounts
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
   }, []);
 
   if (!mounted) return null;
@@ -75,8 +83,8 @@ export default function PurchaseModal({
   const displayTitle = gridTitle || `Grid Space #${gridId}`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-      <div className="bg-card rounded-lg p-6 max-w-md w-full text-foreground">
+    <div className="purchase-modal-overlay">
+      <div className="purchase-modal">
         <h2 className="text-2xl font-bold mb-4">Lease {displayTitle}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">

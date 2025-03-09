@@ -182,4 +182,37 @@ video.absolute {
 header, section, footer {
   position: relative;
   z-index: 10;
+}
+
+/* Purchase modal styles */
+.purchase-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 200; /* Higher than expanded grids (z-100) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.purchase-modal {
+  background-color: hsl(var(--card));
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: scaleIn 0.3s ease-out;
+  z-index: 201;
+}
+
+/* Ensure expanded grids are immediately hidden when modal appears */
+.modal-open .grid-hover-overlay,
+.modal-open [data-hovered="true"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 } 

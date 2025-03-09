@@ -165,11 +165,19 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   };
 
   const handleGridPurchaseClick = (gridId: string) => {
-    setSelectedGridId(gridId);
-    setIsPurchaseModalOpen(true);
-    // Clear expanded grid when purchase modal opens
+    // Clear expanded grid immediately when purchase is clicked
     setExpandedGrid(null);
+    
+    // Call the parent's onPurchaseClick to show the toast notification
     onPurchaseClick(gridId);
+    
+    // Set the selected grid ID but don't show the modal yet
+    setSelectedGridId(gridId);
+    
+    // Show the purchase modal after a 500ms delay
+    setTimeout(() => {
+      setIsPurchaseModalOpen(true);
+    }, 500);
   };
 
   const handleModalClose = () => {
