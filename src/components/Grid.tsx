@@ -22,6 +22,11 @@ export default function Grid({ grid, onClick }: GridProps) {
     }
   };
 
+  const handleCheckout = () => {
+    console.log("Grid component: Checkout initiated for grid:", grid.id);
+    // You could add additional checkout handling here if needed
+  };
+
   return (
     <>
       <div
@@ -43,13 +48,15 @@ export default function Grid({ grid, onClick }: GridProps) {
         )}
       </div>
 
-      <PurchaseModal
-        gridId={grid.id}
-        price={grid.price || PRICING.BASE_PRICE}
-        isOpen={isPurchaseModalOpen}
-        onClose={() => setIsPurchaseModalOpen(false)}
-        gridTitle={grid.title}
-      />
+      {isPurchaseModalOpen && (
+        <PurchaseModal
+          gridId={grid.id}
+          price={grid.price || PRICING.BASE_PRICE}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          onCheckout={handleCheckout}
+          gridTitle={grid.title}
+        />
+      )}
     </>
   );
 } 

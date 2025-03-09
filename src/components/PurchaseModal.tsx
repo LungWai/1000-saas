@@ -12,7 +12,7 @@ export default function PurchaseModal({
   onClose,
   onCheckout,
   gridTitle,
-}: Omit<PurchaseModalProps, 'isOpen'> & { gridTitle?: string }) {
+}: Omit<PurchaseModalProps, 'isOpen'>) {
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
@@ -40,8 +40,10 @@ export default function PurchaseModal({
     e.preventDefault();
     setError(null);
     setLoading(true);
+    console.log('PurchaseModal: Form submitted', { gridId, email, billingCycle });
 
     try {
+      console.log('PurchaseModal: Sending request to create checkout session');
       const response = await fetch('/api/checkout/create-session', {
         method: 'POST',
         headers: {
@@ -56,14 +58,22 @@ export default function PurchaseModal({
       });
 
       const data = await response.json();
+      console.log('PurchaseModal: Received response', { status: response.status, data });
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create checkout session');
       }
 
+      // Call onCheckout if provided
+      if (onCheckout) {
+        onCheckout();
+      }
+
       // Redirect to Stripe checkout
+      console.log('PurchaseModal: Redirecting to', data.sessionUrl);
       window.location.href = data.sessionUrl;
     } catch (err) {
+      console.error('PurchaseModal: Error during checkout', err);
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoading(false);
     }

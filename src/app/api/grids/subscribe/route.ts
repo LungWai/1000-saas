@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { stripe, createCustomer, getStripeSession } from '@/lib/stripe';
-import { createGrid, getGridById } from '@/lib/db';
+import { 
+  createGrid, 
+  getGridById, 
+  findOrCreateUserByStripeCustomer 
+} from '@/lib/db';
 import { PRICING } from '@/lib/constants';
 
 const subscribeSchema = z.object({
@@ -26,6 +30,13 @@ export async function POST(request: Request) {
 
     // Create Stripe customer
     const customer = await createCustomer(email);
+    
+    // Find or create user using security definer function
+    const user = await findOrCreateUserByStripeCustomer(
+      email,
+      customer.id,
+      'inactive' // Will be updated to active after payment
+    );
 
     // Create price based on billing cycle
     const basePrice = grid.price || PRICING.BASE_PRICE;
@@ -50,7 +61,7 @@ export async function POST(request: Request) {
 
     // Create grid record
     const gridRecord = await createGrid({
-      user_id: customer.id, // Using Stripe customer ID as user ID
+      user_id: user.id, // Using actual user UUID
       status: 'pending',
       title: '',
       description: '',
@@ -60,7 +71,7 @@ export async function POST(request: Request) {
       start_date: new Date(),
       end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)), // Set end date to 1 month from now
       content: null,
-      customerId: customer.id,
+      customerId: customer.id, // Keep this for backward compatibility, if needed
       url: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

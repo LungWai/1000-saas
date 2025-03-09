@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
-import { updateGridContent, getGridById } from '@/lib/db';
+import { 
+  getGridById, 
+  findOrCreateUserByStripeCustomer, 
+  updateGridFromWebhook 
+} from '@/lib/db';
 import { sendPurchaseConfirmation } from '@/lib/resend';
 import Stripe from 'stripe';
 
@@ -46,12 +50,12 @@ export async function POST(request: Request) {
         }
 
         const gridId = session.metadata.gridId;
-        const customerId = session.customer;
-        const subscriptionId = session.subscription;
+        const customerId = session.customer as string;
+        const subscriptionId = session.subscription as string;
 
         // Get subscription details
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId as string);
-        const customer = await stripe.customers.retrieve(customerId as string);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const customer = await stripe.customers.retrieve(customerId);
         
         // Check if customer is active
         if (!isActiveCustomer(customer)) {
@@ -76,19 +80,28 @@ export async function POST(request: Request) {
         const column = (gridNumber % totalColumns) + 1;
         const gridLocation = `Row ${row}, Column ${column}`;
 
-        // Update grid status and details
-        const updatedGrid = await updateGridContent(gridId, customerId as string, {
-          status: 'active',
-          subscription_id: subscriptionId as string,
-          start_date: new Date(subscription.current_period_start * 1000),
-          end_date: new Date(subscription.current_period_end * 1000),
-        });
+        // Find or create user with the Stripe customer ID using security definer function
+        const user = await findOrCreateUserByStripeCustomer(
+          customer.email,
+          customerId,
+          'active'
+        );
+
+        // Update grid with subscription information using security definer function
+        await updateGridFromWebhook(
+          gridId,
+          user.id,
+          subscriptionId,
+          'active',
+          new Date(),
+          new Date(subscription.current_period_end * 1000)
+        );
 
         // Send confirmation email
         await sendPurchaseConfirmation({
           email: customer.email,
           gridId,
-          subscriptionId: subscriptionId as string,
+          subscriptionId,
           amount: subscription.items.data[0].price.unit_amount!,
           renewalDate: new Date(subscription.current_period_end * 1000),
           gridLocation,
@@ -110,10 +123,15 @@ export async function POST(request: Request) {
           throw new Error('Grid not found');
         }
 
-        await updateGridContent(gridId, subscription.customer as string, {
-          status: subscription.status === 'active' ? 'active' : 'inactive',
-          end_date: new Date(subscription.current_period_end * 1000),
-        });
+        // Update grid using security definer function
+        await updateGridFromWebhook(
+          gridId,
+          grid.user_id,
+          subscription.id,
+          subscription.status === 'active' ? 'active' : 'inactive',
+          undefined,
+          new Date(subscription.current_period_end * 1000)
+        );
 
         break;
       }
@@ -131,10 +149,15 @@ export async function POST(request: Request) {
           throw new Error('Grid not found');
         }
 
-        await updateGridContent(gridId, subscription.customer as string, {
-          status: 'inactive',
-          end_date: new Date(),
-        });
+        // Update grid using security definer function
+        await updateGridFromWebhook(
+          gridId,
+          grid.user_id,
+          subscription.id,
+          'inactive',
+          undefined,
+          new Date()
+        );
 
         break;
       }

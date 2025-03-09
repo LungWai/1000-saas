@@ -39,7 +39,6 @@ export const API_ROUTES = {
   },
   USER: {
     GRIDS: '/api/user/grids',
-    PROFILE: '/api/user/profile',
     SUBSCRIPTION: (id: string) => `/api/user/subscription/${id}`,
   },
   WEBHOOKS: {

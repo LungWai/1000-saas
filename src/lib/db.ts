@@ -57,7 +57,6 @@ export const getGridById = async (id: string) => {
 
 export const updateGridContent = async (
   id: string,
-  customerId: string,
   updates: Partial<Grid>
 ) => {
   try {
@@ -65,7 +64,6 @@ export const updateGridContent = async (
       .from('grids')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', customerId)
       .select()
       .single();
 
@@ -148,7 +146,7 @@ export const getGridBySubscription = async (subscriptionId: string) => {
 
 export const updateGridUrl = async (
   id: string,
-  customerId: string,
+  userId: string,
   external_url: string
 ) => {
   try {
@@ -159,7 +157,7 @@ export const updateGridUrl = async (
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('customer_id', customerId)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -167,6 +165,87 @@ export const updateGridUrl = async (
     return data;
   } catch (error) {
     console.error('Error updating grid URL:', error);
+    throw error;
+  }
+};
+
+export const getUserByStripeCustomerId = async (stripeCustomerId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('stripe_customer_id', stripeCustomerId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No record found, return null
+        return null;
+      }
+      throw error;
+    }
+
+    return data as User;
+  } catch (error) {
+    console.error('Error fetching user by Stripe customer ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Find or create a user via the security definer function
+ * This bypasses RLS for webhook operations
+ */
+export const findOrCreateUserByStripeCustomer = async (
+  email: string,
+  stripeCustomerId: string,
+  subscriptionStatus: 'active' | 'inactive' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' = 'active'
+) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('find_or_create_user_by_stripe_customer', {
+        p_email: email,
+        p_stripe_customer_id: stripeCustomerId,
+        p_subscription_status: subscriptionStatus
+      });
+
+    if (error) throw error;
+
+    return data as User;
+  } catch (error) {
+    console.error('Error finding or creating user by Stripe customer ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update grid with subscription information via the security definer function
+ * This bypasses RLS for webhook operations
+ */
+export const updateGridFromWebhook = async (
+  gridId: string,
+  userId: string,
+  subscriptionId: string,
+  status: 'active' | 'inactive' | 'pending' = 'active',
+  startDate?: Date,
+  endDate?: Date
+) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('update_grid_from_webhook', {
+        p_grid_id: gridId,
+        p_user_id: userId,
+        p_subscription_id: subscriptionId,
+        p_status: status,
+        p_start_date: startDate,
+        p_end_date: endDate
+      });
+
+    if (error) throw error;
+
+    return data as Grid;
+  } catch (error) {
+    console.error('Error updating grid from webhook:', error);
     throw error;
   }
 }; 

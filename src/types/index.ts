@@ -55,7 +55,6 @@ export interface GridHoverOverlayProps {
 export interface PurchaseModalProps {
   gridId: string;
   price: number;
-  isOpen: boolean;
   onClose: () => void;
   onCheckout?: () => void;
   gridTitle?: string;
