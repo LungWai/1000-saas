@@ -19,6 +19,7 @@ export default function PurchaseModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showEditInfo, setShowEditInfo] = useState(false);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -69,9 +70,10 @@ export default function PurchaseModal({
   };
 
   const calculatePrice = () => {
-    const basePrice = price;
+    // Ensure price is treated as a number
+    const basePrice = Number(price);
     return billingCycle === 'yearly' 
-      ? basePrice * 12 * 0.9 // 10% yearly discount
+      ? basePrice * 12 * 0.85 // 15% yearly discount
       : billingCycle === 'quarterly'
       ? basePrice * 3 * 0.95 // 5% quarterly discount
       : basePrice;
@@ -116,7 +118,7 @@ export default function PurchaseModal({
                   onChange={(e) => setBillingCycle(e.target.value as 'monthly')}
                   className="mr-2 text-primary"
                 />
-                Monthly (${price}/month)
+                Monthly (${price.toFixed(2)}/month)
               </label>
               <label className="flex items-center">
                 <input
@@ -136,9 +138,43 @@ export default function PurchaseModal({
                   onChange={(e) => setBillingCycle(e.target.value as 'yearly')}
                   className="mr-2 text-primary"
                 />
-                Yearly (${(price * 12 * 0.9).toFixed(2)}/year - Save 10%)
+                Yearly (${(price * 12 * 0.85).toFixed(2)}/year - Save 15%)
               </label>
             </div>
+          </div>
+          
+          {/* Collapsible section about editing capabilities */}
+          <div className="mt-4 bg-background/50 rounded-md p-3 border border-border">
+            <button
+              type="button"
+              className="flex justify-between items-center w-full text-left text-sm font-medium"
+              onClick={() => setShowEditInfo(!showEditInfo)}
+            >
+              <span>What can I customize after purchase?</span>
+              <svg
+                className={`h-5 w-5 transition-transform ${showEditInfo ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showEditInfo && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                <p className="mb-2">After purchasing, you'll be able to customize your grid with:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Custom title (up to 50 characters)</li>
+                  <li>Detailed description (up to 250 characters)</li>
+                  <li>Upload images (JPG, PNG, GIF up to 2MB)</li>
+                  <li>Add external URLs to your website or socials</li>
+                </ul>
+                <p className="mt-2">
+                  You'll receive editing instructions and access details via email after purchase.
+                </p>
+              </div>
+            )}
           </div>
 
           {error && (

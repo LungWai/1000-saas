@@ -5,8 +5,18 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     i INTEGER;
+    grid_price NUMERIC(10,2);
 BEGIN
     FOR i IN 1..1000 LOOP
+        -- Set price based on grid number
+        IF i <= 200 THEN
+            grid_price := 4.99; -- First 200 grids
+        ELSIF i <= 500 THEN
+            grid_price := 3.99; -- Next 300 grids (201-500)
+        ELSE
+            grid_price := 2.99; -- Last 500 grids (501-1000)
+        END IF;
+        
         INSERT INTO public.grids (
             title,
             description,
@@ -22,7 +32,7 @@ BEGIN
             '{}',
             NULL,  -- No image initially
             NULL,  -- No external URL initially
-            10.00,  -- Default price
+            grid_price,  -- Variable price based on grid number
             'pending',
             '00000000-0000-0000-0000-000000000000'  -- Placeholder admin user ID
         );

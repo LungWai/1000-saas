@@ -45,7 +45,7 @@ export default function Grid({ grid, onClick }: GridProps) {
 
       <PurchaseModal
         gridId={grid.id}
-        price={PRICING.BASE_PRICE}
+        price={grid.price || PRICING.BASE_PRICE}
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
         gridTitle={grid.title}

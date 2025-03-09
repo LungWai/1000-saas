@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { stripe, createCustomer, getStripeSession } from '@/lib/stripe';
-import { createGrid } from '@/lib/db';
+import { createGrid, getGridById } from '@/lib/db';
 import { PRICING } from '@/lib/constants';
 
 const subscribeSchema = z.object({
@@ -15,12 +15,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { gridId, email, billingCycle } = subscribeSchema.parse(body);
 
+    // Get the actual grid price from the database
+    const grid = await getGridById(gridId);
+    if (!grid) {
+      return NextResponse.json(
+        { error: 'Grid not found' },
+        { status: 404 }
+      );
+    }
+
     // Create Stripe customer
     const customer = await createCustomer(email);
 
     // Create price based on billing cycle
-    const amount = PRICING.BASE_PRICE * (
-      billingCycle === 'yearly' ? 12 * 0.9 : // 10% discount for yearly
+    const basePrice = grid.price || PRICING.BASE_PRICE;
+    const amount = basePrice * (
+      billingCycle === 'yearly' ? 12 * 0.85 : // 15% discount for yearly
       billingCycle === 'quarterly' ? 3 * 0.95 : // 5% discount for quarterly
       1
     );
@@ -39,7 +49,7 @@ export async function POST(request: Request) {
     });
 
     // Create grid record
-    const grid = await createGrid({
+    const gridRecord = await createGrid({
       user_id: customer.id, // Using Stripe customer ID as user ID
       status: 'pending',
       title: '',
@@ -60,7 +70,7 @@ export async function POST(request: Request) {
     const session = await getStripeSession(
       price.id,
       customer.id,
-      grid.id
+      gridRecord.id
     );
 
     return NextResponse.json({

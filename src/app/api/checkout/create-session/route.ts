@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { PRICING } from '@/lib/constants';
+import { getGridById } from '@/lib/db';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -24,10 +25,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get the actual grid price from the database
+    const grid = await getGridById(gridId);
+    if (!grid) {
+      return NextResponse.json(
+        { error: 'Grid not found' },
+        { status: 404 }
+      );
+    }
+
     // Calculate price based on billing cycle
-    const basePrice = PRICING.BASE_PRICE;
+    const basePrice = grid.price || PRICING.BASE_PRICE;
     const priceMultiplier = billingCycle === 'yearly' 
-      ? 12 * 0.9 // 10% yearly discount
+      ? 12 * 0.85 // 15% yearly discount
       : billingCycle === 'quarterly'
       ? 3 * 0.95 // 5% quarterly discount
       : 1;

@@ -14,7 +14,7 @@ export const GRID_CONFIG = {
 } as const;
 
 export const PRICING = {
-  BASE_PRICE: 10.00,
+  BASE_PRICE: 4.99,
   CURRENCY: 'usd',
 } as const;
 

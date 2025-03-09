@@ -219,7 +219,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
         <PurchaseModal
           gridId={selectedGridId}
           onClose={handleModalClose}
-          price={PRICING.DEFAULT_PRICE}
+          price={grids?.find(grid => grid.id === selectedGridId)?.price || PRICING.BASE_PRICE}
           gridTitle={grids?.find(grid => grid.id === selectedGridId)?.title}
         />
       )}
