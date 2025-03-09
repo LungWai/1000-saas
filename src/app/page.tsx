@@ -95,6 +95,22 @@ export default function Home() {
         return;
       }
 
+      // Sort grids by title numerically (assuming titles are like "Grid 1", "Grid 2", etc.)
+      // This ensures leased grids stay in their original position
+      allGrids.sort((a, b) => {
+        // Extract numeric portion from titles
+        const getNumFromTitle = (title: string) => {
+          if (!title) return Infinity; // Put grids without titles at the end
+          const matches = title.match(/\d+/);
+          return matches ? parseInt(matches[0]) : Infinity;
+        };
+        
+        const numA = getNumFromTitle(a.title || '');
+        const numB = getNumFromTitle(b.title || '');
+        
+        return numA - numB;
+      });
+
       const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => ({
         id: grid.id.toString(),
         status: grid.status === 'active' ? 'leased' : 'empty',

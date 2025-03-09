@@ -1,21 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EditAccess, EditModalProps } from '@/types';
 
 export const EditModal: React.FC<EditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  gridId
 }) => {
   const [credentials, setCredentials] = useState<EditAccess>({
     subscriptionId: '',
     email: '',
-    gridId: '',
+    gridId: gridId || '',
   });
 
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update gridId in credentials when prop changes
+  useEffect(() => {
+    if (gridId) {
+      setCredentials(prev => ({ ...prev, gridId }));
+    }
+  }, [gridId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +45,10 @@ export const EditModal: React.FC<EditModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Verify Edit Access</h2>
+        <h2 className="text-xl font-semibold mb-4">Customize Your Grid Space</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Please enter your subscription ID and email to edit your grid content.
+        </p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -52,6 +63,9 @@ export const EditModal: React.FC<EditModalProps> = ({
               onChange={(e) => setCredentials(prev => ({ ...prev, subscriptionId: e.target.value }))}
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Your subscription ID was sent to your email after purchase.
+            </p>
           </div>
 
           <div>
@@ -67,6 +81,21 @@ export const EditModal: React.FC<EditModalProps> = ({
               required
             />
           </div>
+
+          {gridId && (
+            <div>
+              <label htmlFor="gridId" className="block text-sm font-medium text-gray-700">
+                Grid ID
+              </label>
+              <input
+                type="text"
+                id="gridId"
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm"
+                value={credentials.gridId}
+                readOnly
+              />
+            </div>
+          )}
 
           {error && (
             <p className="text-red-500 text-sm mt-2">{error}</p>
@@ -85,7 +114,7 @@ export const EditModal: React.FC<EditModalProps> = ({
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md disabled:opacity-50"
             >
-              {isLoading ? 'Verifying...' : 'Verify & Edit'}
+              {isLoading ? 'Verifying...' : 'Customize Grid'}
             </button>
           </div>
         </form>

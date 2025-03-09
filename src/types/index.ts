@@ -93,4 +93,5 @@ export interface EditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: EditAccess) => Promise<void>;
+  gridId?: string;
 } 

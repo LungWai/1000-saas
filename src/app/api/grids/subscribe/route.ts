@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const gridRecord = await createGrid({
       user_id: user.id, // Using actual user UUID
       status: 'pending',
-      title: '',
+      title: `Grid ${gridId}`, // Ensure grid title includes its number for sorting
       description: '',
       image_url: '',
       external_url: '',

@@ -72,8 +72,23 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   useEffect(() => {
     const newPositions = new Map<string, { row: number, col: number }>();
     
+    // First sort grids by title numerically if needed
+    const sortedGrids = [...grids].sort((a, b) => {
+      // Extract numeric portion from titles
+      const getNumFromTitle = (title?: string) => {
+        if (!title) return Infinity;
+        const matches = title.match(/\d+/);
+        return matches ? parseInt(matches[0]) : Infinity;
+      };
+      
+      const numA = getNumFromTitle(a.title);
+      const numB = getNumFromTitle(b.title);
+      
+      return numA - numB;
+    });
+    
     for (let i = 0; i < visibleGrids; i++) {
-      const gridId = i < grids.length ? grids[i].id : `grid-${i}`;
+      const gridId = i < sortedGrids.length ? sortedGrids[i].id : `grid-${i}`;
       const row = Math.floor(i / dynamicColumns);
       const col = i % dynamicColumns;
       newPositions.set(gridId, { row, col });
