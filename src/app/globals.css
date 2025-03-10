@@ -254,4 +254,52 @@ header, section, footer {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Smaller grid title for non-hovered state */
+.grid-title-small {
+  font-size: 14px;
+  line-height: 1.1;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* White legend at bottom of grid (non-hovered) */
+.grid-title-legend {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.15rem 0.25rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+
+/* Optimize text display in grid overlays */
+.grid-text-title {
+  font-size: 0.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Limit to 1 line */
+  -webkit-box-orient: vertical;
+}
+
+.grid-text-description {
+  font-size: 0.2rem;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;
 } 

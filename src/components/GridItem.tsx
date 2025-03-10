@@ -239,10 +239,10 @@ const GridItem: React.FC<ExtendedGridProps> = ({
                 />
               )}
               
-              {/* Only show title in non-hover state if no content or image is present */}
+              {/* Only show title in non-hover state if no content or image is present - SMALLER SIZE */}
               {!isHovered && title && (!imageUrl || (!hasValidContent() && !description)) && (
-                <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2 z-20">
-                  <p className="text-black text-xs truncate">{title}</p>
+                <div className="grid-title-legend">
+                  <p className="grid-title-small">{title}</p>
                 </div>
               )}
               

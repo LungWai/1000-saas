@@ -285,4 +285,73 @@ export const updateGridFromWebhook = async (
     console.error('Error updating grid from webhook:', error);
     throw error;
   }
+};
+
+/**
+ * Create or update a subscription record in the database
+ * Uses the security definer function to bypass RLS policies
+ */
+export const createOrUpdateSubscription = async (data: {
+  id: string;
+  user_id: string;
+  grid_id?: string;
+  amount?: number;
+  billing_cycle?: 'monthly' | 'quarterly' | 'yearly';
+  stripe_subscription_id?: string;
+  status?: 'active' | 'canceled' | 'past_due';
+  next_billing_date?: Date;
+  current_period_start?: Date;
+  current_period_end?: Date;
+}) => {
+  try {
+    console.log('Creating/updating subscription:', data.id);
+    
+    // If grid_id is null, use the special function that handles subscriptions without grids
+    if (!data.grid_id) {
+      console.log('Using create_subscription_without_grid because grid_id is null');
+      const { error } = await supabase
+        .rpc('create_subscription_without_grid', {
+          p_id: data.id,
+          p_user_id: data.user_id,
+          p_amount: data.amount,
+          p_billing_cycle: data.billing_cycle,
+          p_stripe_subscription_id: data.stripe_subscription_id,
+          p_status: data.status,
+          p_next_billing_date: data.next_billing_date,
+          p_current_period_start: data.current_period_start,
+          p_current_period_end: data.current_period_end || data.next_billing_date // Fallback to next_billing_date
+        });
+      
+      if (error) throw error;
+      
+      // Just return a basic subscription since we don't have the full object
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        status: data.status || 'active'
+      } as Subscription;
+    }
+    
+    // Use the security definer function to bypass RLS
+    const { data: result, error } = await supabase
+      .rpc('create_or_update_subscription_from_webhook', {
+        p_id: data.id,
+        p_user_id: data.user_id,
+        p_grid_id: data.grid_id,
+        p_amount: data.amount,
+        p_billing_cycle: data.billing_cycle,
+        p_stripe_subscription_id: data.stripe_subscription_id,
+        p_status: data.status,
+        p_next_billing_date: data.next_billing_date,
+        p_current_period_start: data.current_period_start,
+        p_current_period_end: data.current_period_end || data.next_billing_date // Fallback to next_billing_date
+      });
+    
+    if (error) throw error;
+    
+    return result as Subscription;
+  } catch (error) {
+    console.error('Error creating/updating subscription:', error);
+    throw error;
+  }
 }; 

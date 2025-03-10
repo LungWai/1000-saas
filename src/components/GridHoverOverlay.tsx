@@ -97,10 +97,12 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
   
   return (
     <>
-      {/* Status badge */}
+      {/* Status badge - Changed to show "leased" in green */}
       <div className="absolute top-0 right-0 z-50 p-0.5 flex justify-end pointer-events-none">
         <div className={`text-[0.16rem] px-0.5 py-0.5 rounded-sm ${
-          isDarkMode ? 'bg-black/70 text-white' : 'bg-white/70 text-black'
+          isLeased 
+            ? 'bg-green-500 text-white' 
+            : isDarkMode ? 'bg-black/70 text-white' : 'bg-white/70 text-black'
         }`}>
           {status}
         </div>
@@ -111,19 +113,27 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
         <div className="absolute bottom-[0.4rem] left-0 right-0 w-full px-2 content-fade-in pointer-events-none">
           {/* Description - Moved to bottom */}
           {description && (
-            <div className={`w-full text-center mb-2 py-1 px-2 text-[0.22rem] font-medium rounded-sm ${
+            <div className={`w-full text-center mb-2 py-1 px-2 rounded-sm ${
               isDarkMode ? 'bg-black/70 text-white' : 'bg-white/70 text-black'
             }`}>
-              {truncateText(description, 30)}
+              {/* Optimize title size: larger for shorter titles (4-5 words) */}
+              <div className="grid-text-title">
+                {truncateText(title, 40)}
+              </div>
+              
+              {/* Optimize description size: smaller for longer text */}
+              <div className="grid-text-description">
+                {truncateText(description, 60)}
+              </div>
             </div>
           )}
           
           {/* Content - only displayed if valid and not empty */}
           {displayContent && (
-            <div className={`text-[0.18rem] p-1 rounded-sm max-w-full overflow-hidden ${
+            <div className={`text-[0.16rem] p-1 rounded-sm max-w-full overflow-hidden ${
               isDarkMode ? 'bg-black/60 text-white' : 'bg-white/60 text-black'
             }`}>
-              {truncateText(displayContent, 50)}
+              {truncateText(displayContent, 80)}
             </div>
           )}
           
