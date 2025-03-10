@@ -270,7 +270,7 @@ header, section, footer {
 
 /* White legend at bottom of grid (non-hovered) */
 .grid-title-legend {
-  background: rgba(255, 255, 255, 0.8);
+  background: hsla(var(--card), 0.8);
   padding: 0.15rem 0.25rem;
   position: absolute;
   bottom: 0;

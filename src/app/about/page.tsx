@@ -126,52 +126,52 @@ export default function About() {
         </header>
 
         {/* Hero Section */}
-        <section className={`w-full py-20 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="max-w-[1000px] mx-auto px-8 text-center">
-            <div className="bg-card rounded-lg p-10">
-              <h2 className="text-4xl font-bold tracking-tight mb-6 text-foreground">About 1000 SaaS Space</h2>
-              <p className="text-xl text-foreground/80 leading-relaxed max-w-[700px] mx-auto">
-                The premier digital real estate platform for SaaS companies looking to grow their presence and reach new audiences.
+        <section className={`w-full py-8 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="max-w-[800px] mx-auto px-4">
+            <div className="bg-card rounded-lg p-6">
+              <h2 className="text-2xl font-bold tracking-tight mb-3 text-foreground">About 1000 SaaS Space</h2>
+              <p className="text-base text-foreground/80 leading-relaxed max-w-[600px] mx-auto">
+                Your digital billboard in the SaaS ecosystem. Premium advertising space where innovative software solutions meet their ideal audience.
               </p>
             </div>
           </div>
         </section>
 
         {/* Content Section */}
-        <section className={`w-full py-16 transition-all duration-700 ${contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="max-w-[1000px] mx-auto px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="bg-card rounded-lg p-8 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-                <h3 className="text-2xl font-semibold mb-4">Grid Digital Real Estate</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  SaaS Space offers premium grid-based digital real estate, providing a unique and visually engaging platform for your SaaS product. Each space represents an opportunity to showcase your brand in a concentrated marketplace of innovation.
+        <section className={`w-full py-6 transition-all duration-700 ${contentVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="max-w-[800px] mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-card rounded-lg p-5 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+                <h3 className="text-lg font-semibold mb-2">Grid Digital Real Estate</h3>
+                <p className="text-foreground/80 leading-snug text-sm">
+                  Own a piece of prime digital real estate in our innovative grid marketplace. Each space is a unique opportunity to showcase your SaaS product to a targeted audience.
                 </p>
               </div>
               
-              <div className="bg-card rounded-lg p-8 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-                <h3 className="text-2xl font-semibold mb-4">Concentrated Traffic</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Leverage our concentrated traffic from major platforms including YouTube, TikTok, and Meta. Our strategic advertising campaigns drive qualified visitors directly to the 1000 SaaS marketplace, connecting your product with potential customers.
+              <div className="bg-card rounded-lg p-5 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+                <h3 className="text-lg font-semibold mb-2">Concentrated Traffic</h3>
+                <p className="text-foreground/80 leading-snug text-sm">
+                  Direct exposure to qualified leads through our strategic presence on YouTube, TikTok, and Meta. Your SaaS solution, front and center where it matters.
                 </p>
               </div>
               
-              <div className="bg-card rounded-lg p-8 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-                <h3 className="text-2xl font-semibold mb-4">Grow Your Business</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Allow more traffic to flow to your SaaS project by securing your space in our digital marketplace. Our platform is designed to increase visibility and drive conversions for innovative SaaS solutions across all industries.
+              <div className="bg-card rounded-lg p-5 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+                <h3 className="text-lg font-semibold mb-2">Grow Your Business</h3>
+                <p className="text-foreground/80 leading-snug text-sm">
+                  Amplify your reach in our curated marketplace. Join a community of innovative SaaS solutions and connect with users actively seeking new software solutions.
                 </p>
               </div>
               
-              <div className="bg-card rounded-lg p-8 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
-                <h3 className="text-2xl font-semibold mb-4">Claim Your Space</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Don't miss the opportunity to claim your advertising space in this exclusive digital ecosystem. With limited spaces available, securing your position now ensures maximum visibility as our platform continues to grow.
+              <div className="bg-card rounded-lg p-5 border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+                <h3 className="text-lg font-semibold mb-2">Claim Your Space</h3>
+                <p className="text-foreground/80 leading-snug text-sm">
+                  Limited spaces available in this exclusive digital ecosystem. Secure your position now and maximize your visibility in the growing SaaS marketplace.
                 </p>
               </div>
             </div>
             
-            <div className="mt-16 text-center">
-              <Link href="/" className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
+            <div className="mt-8 text-center">
+              <Link href="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors">
                 Explore Available Spaces
               </Link>
             </div>
@@ -179,20 +179,20 @@ export default function About() {
         </section>
 
         {/* Footer */}
-        <footer className="w-full bg-card/40 border-t border-border py-16 backdrop-blur-sm mt-16">
-          <div className="max-w-[1200px] mx-auto px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <footer className="w-full bg-card/40 border-t border-border py-8 backdrop-blur-sm mt-8">
+          <div className="max-w-[800px] mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Contact</h3>
-                <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-2">Contact</h3>
+                <div className="space-y-1">
                   <a href={`mailto:${COMPANY_INFO.CONTACT_EMAIL}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors block">
                     {COMPANY_INFO.CONTACT_EMAIL}
                   </a>
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Links</h3>
-                <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-2">Links</h3>
+                <div className="space-y-1">
                   <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">
                     Home
                   </Link>
@@ -202,8 +202,8 @@ export default function About() {
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-4">Legal</h3>
-                <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-2">Legal</h3>
+                <div className="space-y-1">
                   <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors block">
                     Terms of Service
                   </Link>
@@ -213,7 +213,7 @@ export default function About() {
                 </div>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-border/50 text-center text-sm text-muted-foreground">
+            <div className="mt-6 pt-4 border-t border-border/50 text-center text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} 1000 SaaS Space. All rights reserved.
             </div>
           </div>
