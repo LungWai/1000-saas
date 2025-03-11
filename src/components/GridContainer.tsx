@@ -32,6 +32,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [selectedGridId, setSelectedGridId] = useState<string | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [forceRecalculation, setForceRecalculation] = useState(0);
 
   // Adjust grid layout based on viewport size
   useEffect(() => {
@@ -68,7 +69,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     };
   }, [containerSize]);
 
-  // Update grid positions when columns or visible grids change
+  // Update grid positions when columns, visible grids, or force recalculation changes
   useEffect(() => {
     const newPositions = new Map<string, { row: number, col: number }>();
     
@@ -95,18 +96,26 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     }
     
     setGridPositions(newPositions);
-  }, [dynamicColumns, visibleGrids, grids]);
+  }, [dynamicColumns, visibleGrids, grids, forceRecalculation]);
 
-  // Determine if a grid is on the perimeter
-  const isPerimeterGrid = (gridId: string) => {
+  // Enhanced isPerimeterGrid function with memoization
+  const getPerimeterInfo = (gridId: string) => {
     const position = gridPositions.get(gridId);
-    if (!position) return false;
+    if (!position) return { isPerimeter: false, edges: [] };
     
     const { row, col } = position;
     const maxRow = Math.floor((visibleGrids - 1) / dynamicColumns);
     
-    // Check if grid is on the edge of the container
-    return row === 0 || col === 0 || row === maxRow || col === dynamicColumns - 1;
+    const edges = [];
+    if (row === 0) edges.push('top');
+    if (row === maxRow) edges.push('bottom');
+    if (col === 0) edges.push('left');
+    if (col === dynamicColumns - 1) edges.push('right');
+    
+    return {
+      isPerimeter: edges.length > 0,
+      edges
+    };
   };
 
   // Adjust hover direction for perimeter grids
@@ -180,8 +189,9 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   };
 
   const handleGridPurchaseClick = (gridId: string) => {
-    // Clear expanded grid immediately when purchase is clicked
+    // Clear expanded grid and prevent new expansions
     setExpandedGrid(null);
+    document.body.classList.add('modal-open');
     
     // Call the parent's onPurchaseClick to show the toast notification
     onPurchaseClick(gridId);
@@ -189,16 +199,31 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     // Set the selected grid ID but don't show the modal yet
     setSelectedGridId(gridId);
     
-    // Show the purchase modal after a 500ms delay
+    // Show the purchase modal after a delay to ensure smooth transition
     setTimeout(() => {
       setIsPurchaseModalOpen(true);
-    }, 500);
+    }, 300);
   };
 
   const handleModalClose = () => {
     setIsPurchaseModalOpen(false);
     setSelectedGridId(null);
     setIsLoading(null);
+    
+    // Remove modal open class and add closing class temporarily
+    document.body.classList.remove('modal-open');
+    document.body.classList.add('modal-closing');
+    
+    // Clear expanded grid state
+    setExpandedGrid(null);
+    
+    // Force recalculation of grid positions and perimeter status
+    setForceRecalculation(prev => prev + 1);
+    
+    // Remove closing class after transition
+    setTimeout(() => {
+      document.body.classList.remove('modal-closing');
+    }, 500);
   };
 
   const getTransformOriginForGrid = (gridId: string) => {
@@ -261,6 +286,8 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
               isLoading={isLoading}
               getTransformOrigin={() => getTransformOriginForGrid(grid.id)}
               onHoverStateChange={handleGridHoverStateChange}
+              perimeterInfo={getPerimeterInfo(grid.id)}
+              forceRecalculation={forceRecalculation}
             />
           )
         ))}

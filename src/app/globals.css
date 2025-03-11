@@ -210,11 +210,19 @@ header, section, footer {
 
 /* Ensure expanded grids are immediately hidden when modal appears */
 .modal-open .grid-hover-overlay,
-.modal-open [data-hovered="true"] {
+.modal-open [data-hovered="true"],
+.modal-closing .grid-hover-overlay,
+.modal-closing [data-hovered="true"] {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+  transform: scale(1) !important;
+}
+
+/* Prevent hover effects during modal transitions */
+.modal-closing * {
+  pointer-events: none !important;
 }
 
 /* Additional grid hover styles for leased grids */

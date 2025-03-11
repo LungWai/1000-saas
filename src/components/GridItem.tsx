@@ -13,6 +13,8 @@ interface ExtendedGridProps extends GridProps {
   getTransformOrigin?: () => string;
   onHoverStateChange?: (id: string, isHovered: boolean, element?: HTMLElement) => void;
   content?: string | null;
+  perimeterInfo?: { isPerimeter: boolean; edges: string[] };
+  forceRecalculation?: number;
 }
 
 const GridItem: React.FC<ExtendedGridProps> = ({
@@ -29,14 +31,45 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   style = {},
   getTransformOrigin,
   onHoverStateChange,
+  perimeterInfo = { isPerimeter: false, edges: [] },
+  forceRecalculation = 0,
 }) => {
   const isEmpty = status === 'empty';
   const isLeased = status === 'leased';
   const [isHovered, setIsHovered] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [zIndex, setZIndex] = useState(10);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   
+  // Reset states when forceRecalculation changes
+  useEffect(() => {
+    if (forceRecalculation > 0) {
+      setIsHovered(false);
+      setZIndex(10);
+      
+      if (gridRef.current) {
+        gridRef.current.style.cssText = `
+          z-index: 10;
+          transform: scale(1);
+          transform-origin: ${getTransformOrigin ? getTransformOrigin() : 'center center'};
+          pointer-events: auto;
+        `;
+      }
+    }
+  }, [forceRecalculation, getTransformOrigin]);
+
+  // Update z-index based on hover state and perimeter position
+  useEffect(() => {
+    if (isHovered) {
+      // Higher z-index for perimeter grids to ensure they appear above others
+      setZIndex(perimeterInfo.isPerimeter ? 120 : 100);
+    } else {
+      // Base z-index slightly higher for perimeter grids
+      setZIndex(perimeterInfo.isPerimeter ? 15 : 10);
+    }
+  }, [isHovered, perimeterInfo.isPerimeter]);
+
   // Safety check for content to prevent rendering issues
   const hasValidContent = (): boolean => {
     if (!content) return false;
@@ -145,40 +178,50 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   };
 
   const handleCloseEditModal = () => {
+    // First, reset modal state
     setIsEditModalOpen(false);
     
-    // Force reset of all hover and expansion states
+    // Reset hover state
     setIsHovered(false);
+    
+    // Reset z-index
+    setZIndex(perimeterInfo.isPerimeter ? 15 : 10);
+    
+    // Clear any pending hover timeouts
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
     
     // Reset the grid's hover and z-index state
     if (gridRef.current) {
-      // Force reset to default styles with !important to override any transitions
-      gridRef.current.setAttribute('style', `
-        z-index: 10 !important;
+      // Force immediate style reset
+      gridRef.current.style.cssText = `
+        z-index: ${perimeterInfo.isPerimeter ? 15 : 10} !important;
         transform: scale(1) !important;
-        transform-origin: center center !important;
+        transform-origin: ${getTransformOrigin ? getTransformOrigin() : 'center center'} !important;
         transition: none !important;
-      `);
+        pointer-events: none !important;
+      `;
       
-      // Then restore the original styles without the override
+      // Remove any hover-related attributes and classes
+      gridRef.current.setAttribute('data-hovered', 'false');
+      gridRef.current.classList.remove('z-[100]', 'z-[120]');
+      
+      // Force a repaint
+      void gridRef.current.offsetHeight;
+      
+      // Restore normal styles and interactions after a delay
       setTimeout(() => {
         if (gridRef.current) {
-          gridRef.current.setAttribute('style', `
-            z-index: 10;
+          gridRef.current.style.cssText = `
+            z-index: ${perimeterInfo.isPerimeter ? 15 : 10};
             transform: scale(1);
-            transform-origin: center center;
-          `);
+            transform-origin: ${getTransformOrigin ? getTransformOrigin() : 'center center'};
+            pointer-events: auto;
+          `;
         }
-      }, 50);
-      
-      // Reset the data-hovered attribute
-      gridRef.current.setAttribute('data-hovered', 'false');
-      
-      // Remove any classes that might be affecting the display
-      gridRef.current.classList.remove('z-[100]');
-      
-      // Force a repaint to ensure styles are applied
-      void gridRef.current.offsetWidth;
+      }, 300); // Match transition duration
     }
     
     // Notify parent that hover state has changed
@@ -186,17 +229,11 @@ const GridItem: React.FC<ExtendedGridProps> = ({
       onHoverStateChange(id, false);
     }
     
-    // Delay any new hover effects to prevent immediate re-hover
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    
-    hoverTimeoutRef.current = setTimeout(() => {
-      // Allow hover events again after a delay
-      if (gridRef.current) {
-        gridRef.current.style.pointerEvents = 'auto';
-      }
-    }, 500); // Slightly longer delay to prevent accidental immediate hover
+    // Prevent any new hover effects temporarily
+    document.body.classList.add('modal-closing');
+    setTimeout(() => {
+      document.body.classList.remove('modal-closing');
+    }, 500);
   };
 
   const handleEditModalSubmit = async (data: EditAccess) => {
@@ -264,7 +301,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
           overflow-hidden
           transition-all
           duration-300
-          ${isHovered ? `z-[100]` : 'z-10'}
+          ${isHovered ? (perimeterInfo.isPerimeter ? 'z-[120]' : 'z-[100]') : (perimeterInfo.isPerimeter ? 'z-[15]' : 'z-10')}
           outline-none
           focus:ring-2
           focus:ring-primary
@@ -281,7 +318,8 @@ const GridItem: React.FC<ExtendedGridProps> = ({
           aspectRatio: '1 / 1',
           willChange: 'transform',
           transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
-          transformOrigin,
+          transformOrigin: getTransformOrigin ? getTransformOrigin() : 'center center',
+          zIndex,
           ...style,
         }}
         onMouseEnter={handleMouseEnter}
@@ -296,6 +334,8 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         data-grid-id={id}
         data-grid-status={status}
         data-hovered={isHovered ? "true" : "false"}
+        data-perimeter={perimeterInfo.isPerimeter ? "true" : "false"}
+        data-edges={perimeterInfo.edges.join(' ')}
       >
         <div
           className={`relative w-full h-full border border-gray-300 overflow-hidden ${
