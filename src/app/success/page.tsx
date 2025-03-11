@@ -5,10 +5,12 @@ import { Suspense, useEffect, useState } from 'react';
 import EditModal from '@/components/EditModal';
 import GridContentEditor from '@/components/GridContentEditor';
 import { Grid } from '@/types';
+import { useToast } from "@/components/ui/use-toast";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const sessionId = searchParams.get('session_id');
   const gridId = searchParams.get('grid_id');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -35,6 +37,14 @@ function SuccessContent() {
           // Show the content editor directly after purchase
           setIsContentEditorOpen(true);
           setIsLoading(false);
+          
+          // Show verification toast
+          toast({
+            title: "Subscription Active",
+            description: "You can now use your subscription ID and email to verify access to this grid.",
+            variant: "default",
+            duration: 5000,
+          });
         } catch (err) {
           console.error('Error fetching grid:', err);
           setError(err instanceof Error ? err.message : 'Failed to load grid data');
@@ -46,7 +56,7 @@ function SuccessContent() {
     } else {
       setIsLoading(false);
     }
-  }, [sessionId, gridId]);
+  }, [sessionId, gridId, toast]);
 
   const handleEditModalClose = () => {
     setIsEditModalOpen(false);
@@ -79,13 +89,25 @@ function SuccessContent() {
       }
       
       // Success - show confirmation and redirect
-      alert('Your grid content has been updated successfully!');
-      router.push('/');
+      toast({
+        title: "Success",
+        description: "Your grid content has been updated successfully!",
+        variant: "success",
+      });
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
     } catch (err) {
       console.error('Error saving content:', err);
       setError(err instanceof Error ? err.message : 'Failed to save grid content');
       // Show error to user
-      alert(err instanceof Error ? err.message : 'An error occurred while saving grid content');
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'An error occurred while saving grid content',
+        variant: "destructive",
+      });
     }
   };
 
@@ -138,7 +160,11 @@ function SuccessContent() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       // Show the error to the user
-      alert(err instanceof Error ? err.message : 'An error occurred while updating the grid');
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'An error occurred while updating the grid',
+        variant: "destructive",
+      });
     }
   };
 
@@ -155,6 +181,12 @@ function SuccessContent() {
           Thank you for your purchase. Your grid space has been reserved.
           {isLoading ? ' Loading editor...' : ''}
         </p>
+        <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+          <p className="text-sm text-blue-800 font-medium">Important Information</p>
+          <p className="mt-1 text-sm text-blue-600">
+            Save your subscription ID and email. You'll need these to verify access to your grid in the future.
+          </p>
+        </div>
         {error && (
           <p className="mt-2 text-sm text-red-600">
             {error}

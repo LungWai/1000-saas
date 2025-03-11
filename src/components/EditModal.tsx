@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { EditAccess, EditModalProps, Grid } from '@/types';
 import { useTheme } from '@/lib/ThemeProvider';
-import { CONTENT_LIMITS } from '@/lib/constants';
 import { useToast } from "@/components/ui/use-toast";
+import GridContentEditor from '@/components/GridContentEditor';
 
 export const EditModal: React.FC<EditModalProps> = ({
   isOpen,
@@ -26,13 +26,6 @@ export const EditModal: React.FC<EditModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [gridData, setGridData] = useState<Grid | null>(null);
-  
-  // Content editing state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [externalUrl, setExternalUrl] = useState('');
-  const [contentText, setContentText] = useState('');
 
   // Update gridId in credentials when prop changes
   useEffect(() => {
@@ -77,13 +70,8 @@ export const EditModal: React.FC<EditModalProps> = ({
         const gridResult = await gridResponse.json();
         const grid = gridResult.grid;
         
-        // Set the content form fields with the current grid data
+        // Set the grid data
         setGridData(grid);
-        setTitle(grid.title || '');
-        setDescription(grid.description || '');
-        setImageUrl(grid.image_url || '');
-        setExternalUrl(grid.external_url || '');
-        setContentText(grid.content || '');
         
         // Mark as verified - will show the content editor
         setIsVerified(true);
@@ -117,8 +105,7 @@ export const EditModal: React.FC<EditModalProps> = ({
     }
   };
 
-  const handleContentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleContentSave = async (updates: Partial<Grid>) => {
     setError('');
     setIsLoading(true);
 
@@ -126,11 +113,7 @@ export const EditModal: React.FC<EditModalProps> = ({
       // Add credentials to the content update
       const data = {
         ...credentials,
-        title,
-        description,
-        image_url: imageUrl,
-        external_url: externalUrl,
-        content: contentText
+        ...updates
       };
       
       await onSubmit(data);
@@ -152,57 +135,6 @@ export const EditModal: React.FC<EditModalProps> = ({
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setError('');
-      setIsLoading(true);
-
-      // Validate file size (max 2MB)
-      if (file.size > CONTENT_LIMITS.IMAGE.MAX_SIZE_BYTES) {
-        throw new Error(`Image size must be less than ${CONTENT_LIMITS.IMAGE.MAX_SIZE_MB}MB`);
-      }
-
-      // Check file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      if (!validTypes.includes(file.type)) {
-        throw new Error('Only JPG, PNG, and GIF images are allowed');
-      }
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('gridId', gridId || '');
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const { url } = await response.json();
-      setImageUrl(url);
-      toast({
-        title: "Image uploaded",
-        description: "Image uploaded successfully!",
-        variant: "success",
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload image');
-      toast({
-        title: "Upload error",
-        description: err instanceof Error ? err.message : 'Failed to upload image',
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -211,7 +143,7 @@ export const EditModal: React.FC<EditModalProps> = ({
       style={{ backdropFilter: 'blur(4px)' }}
     >
       <div 
-        className={`rounded-lg p-6 w-full max-w-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+        className={`rounded-lg p-6 w-full max-w-3xl ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
         style={{ 
           boxShadow: isDarkMode ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
           border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
@@ -310,160 +242,28 @@ export const EditModal: React.FC<EditModalProps> = ({
               </div>
             </div>
             
-            <form onSubmit={handleContentSubmit} className="space-y-5">
-              {/* Title Input */}
-              <div>
-                <label htmlFor="title" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH}
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'border-gray-300 bg-white'
-                  } px-3 py-2 text-sm`}
-                  placeholder="Enter a title for your grid"
+            {gridData && (
+              <div className="space-y-4">
+                <GridContentEditor 
+                  grid={gridData}
+                  onSave={handleContentSave}
                 />
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {title.length}/{CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH} characters
-                </p>
-              </div>
-              
-              {/* Description Textarea */}
-              <div>
-                <label htmlFor="description" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH}
-                  rows={3}
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'border-gray-300 bg-white'
-                  } px-3 py-2 text-sm resize-none`}
-                  placeholder="Describe your grid content"
-                />
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {description.length}/{CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH} characters
-                </p>
-              </div>
-              
-              {/* Content Text */}
-              <div>
-                <label htmlFor="content" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Content
-                </label>
-                <textarea
-                  id="content"
-                  value={contentText}
-                  onChange={(e) => setContentText(e.target.value)}
-                  maxLength={CONTENT_LIMITS.TEXT.CONTENT_MAX_LENGTH}
-                  rows={3}
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'border-gray-300 bg-white'
-                  } px-3 py-2 text-sm resize-none`}
-                  placeholder="Additional content (optional)"
-                />
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {contentText.length}/{CONTENT_LIMITS.TEXT.CONTENT_MAX_LENGTH} characters
-                </p>
-              </div>
-              
-              {/* Image Upload */}
-              <div>
-                <label htmlFor="image" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Image
-                </label>
-                <div className={`mt-1 ${imageUrl ? 'flex items-center space-x-4' : ''}`}>
-                  <input
-                    type="file"
-                    id="image"
-                    accept="image/jpeg,image/png,image/gif"
-                    onChange={handleImageUpload}
-                    className={`block text-sm ${
+                
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className={`px-4 py-2 text-sm font-medium rounded-md ${
                       isDarkMode 
-                        ? 'text-gray-300 file:bg-gray-700 file:text-gray-200 file:border-gray-600' 
-                        : 'text-gray-500 file:bg-blue-50 file:text-blue-700 file:border-blue-100'
-                    } file:text-sm file:font-medium file:py-2 file:px-4 file:rounded-md file:border-0 hover:file:bg-opacity-80 file:mr-4`}
-                  />
-                  {imageUrl && (
-                    <img
-                      src={imageUrl}
-                      alt="Grid content"
-                      className="h-24 w-24 object-cover rounded-md border"
-                    />
-                  )}
+                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } transition-colors`}
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Max size: {CONTENT_LIMITS.IMAGE.MAX_SIZE_MB}MB. Supported formats: JPG, PNG, GIF
-                </p>
               </div>
-              
-              {/* External URL */}
-              <div>
-                <label htmlFor="externalUrl" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  External URL
-                </label>
-                <input
-                  type="url"
-                  id="externalUrl"
-                  value={externalUrl}
-                  onChange={(e) => setExternalUrl(e.target.value)}
-                  pattern="https://.*"
-                  placeholder="https://"
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'border-gray-300 bg-white'
-                  } px-3 py-2 text-sm`}
-                />
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Must start with https://
-                </p>
-              </div>
-              
-              {error && (
-                <div className={`p-3 rounded-md ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'} ${isDarkMode ? 'text-red-200' : 'text-red-500'} text-sm`}>
-                  {error}
-                </div>
-              )}
-              
-              <div className="flex justify-end space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`px-4 py-2 text-sm font-medium rounded-md ${
-                    isDarkMode 
-                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  } transition-colors`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-                    isLoading 
-                      ? 'bg-blue-400 cursor-not-allowed' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                  } transition-colors`}
-                >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
+            )}
           </>
         )}
       </div>
