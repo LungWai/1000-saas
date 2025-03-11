@@ -2,6 +2,7 @@ import type React from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/lib/ThemeProvider';
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -46,7 +47,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`min-h-screen font-sans antialiased transition-colors duration-300 bg-background text-foreground ${inter.className}`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

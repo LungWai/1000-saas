@@ -1,7 +1,7 @@
 "use client"
 
 import type React from 'react';
-import { GridProps } from '@/types';
+import { GridProps, EditAccess } from '@/types';
 import GridHoverOverlay from './GridHoverOverlay';
 import { GRID_CONFIG } from '@/lib/constants';
 import { CSSProperties, MouseEvent, useState, useEffect, useRef } from 'react';
@@ -146,28 +146,108 @@ const GridItem: React.FC<ExtendedGridProps> = ({
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
+    
+    // Force reset of all hover and expansion states
+    setIsHovered(false);
+    
+    // Reset the grid's hover and z-index state
+    if (gridRef.current) {
+      // Force reset to default styles with !important to override any transitions
+      gridRef.current.setAttribute('style', `
+        z-index: 10 !important;
+        transform: scale(1) !important;
+        transform-origin: center center !important;
+        transition: none !important;
+      `);
+      
+      // Then restore the original styles without the override
+      setTimeout(() => {
+        if (gridRef.current) {
+          gridRef.current.setAttribute('style', `
+            z-index: 10;
+            transform: scale(1);
+            transform-origin: center center;
+          `);
+        }
+      }, 50);
+      
+      // Reset the data-hovered attribute
+      gridRef.current.setAttribute('data-hovered', 'false');
+      
+      // Remove any classes that might be affecting the display
+      gridRef.current.classList.remove('z-[100]');
+      
+      // Force a repaint to ensure styles are applied
+      void gridRef.current.offsetWidth;
+    }
+    
+    // Notify parent that hover state has changed
+    if (onHoverStateChange) {
+      onHoverStateChange(id, false);
+    }
+    
+    // Delay any new hover effects to prevent immediate re-hover
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    hoverTimeoutRef.current = setTimeout(() => {
+      // Allow hover events again after a delay
+      if (gridRef.current) {
+        gridRef.current.style.pointerEvents = 'auto';
+      }
+    }, 500); // Slightly longer delay to prevent accidental immediate hover
   };
 
-  const handleEditModalSubmit = async (data: any) => {
+  const handleEditModalSubmit = async (data: EditAccess) => {
     try {
       // Submit edit data to server
       const response = await fetch(`/api/grids/${id}/content`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
 
+      // Try to parse the response data
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (err) {
+        // If response can't be parsed as JSON, create default error
+        responseData = { error: 'Failed to update grid content' };
+      }
+      
       if (!response.ok) {
-        throw new Error('Failed to update grid content');
+        const errorMessage = responseData.error || 'Failed to update grid content';
+        console.error('Grid update error:', errorMessage);
+        
+        // Show specific user-friendly error messages based on error type
+        let userMessage = errorMessage;
+        if (errorMessage.includes('Invalid credentials') || 
+            errorMessage.includes('Invalid subscription ID') ||
+            errorMessage.includes('Invalid ID format')) {
+          userMessage = 'The ID you entered was not recognized. Please check and try again.';
+        } else if (errorMessage.includes('Email does not match')) {
+          userMessage = 'The email address does not match our records for this subscription.';
+        } else if (errorMessage.includes('subscription is not active')) {
+          userMessage = 'Your subscription is not active. Please renew to edit this grid.';
+        } else if (errorMessage.includes('permission')) {
+          userMessage = 'You do not have permission to edit this grid.';
+        }
+        
+        throw new Error(userMessage);
       }
 
+      // Success - close modal and refresh the page
       setIsEditModalOpen(false);
       // Refresh the page to see updated content
       window.location.reload();
     } catch (error) {
       console.error('Error updating grid:', error);
+      // Show the error to the user
+      alert(error instanceof Error ? error.message : 'An error occurred while updating the grid');
     }
   };
 

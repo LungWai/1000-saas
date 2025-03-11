@@ -34,12 +34,29 @@ const GridHoverOverlay: React.FC<ExtendedGridHoverOverlayProps> = ({
   
   if (!isVisible || !mounted) return null;
   
-  const handleButtonClick = (e: MouseEvent) => {
+  const handleButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLoading) {
-      onPurchaseClick(id);
+    
+    // For Edit button (leased grids), immediately hide the overlay
+    if (isLeased) {
+      // Find parent grid element and remove hover state
+      const gridElement = e.currentTarget.closest('[data-hovered="true"]');
+      if (gridElement) {
+        // Force immediate removal of hover class and scale transform
+        gridElement.setAttribute('data-hovered', 'false');
+        
+        // Apply direct style to override any transition
+        const gridDiv = gridElement as HTMLElement;
+        if (gridDiv.style) {
+          gridDiv.style.transform = 'scale(1)';
+          gridDiv.style.zIndex = '10';
+        }
+      }
     }
+    
+    // Call the purchase click handler with the ID
+    onPurchaseClick(id);
   };
   
   const isDarkMode = theme === 'dark';
