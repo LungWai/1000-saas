@@ -1,3 +1,8 @@
+-- Drop existing functions to avoid conflicts
+DROP FUNCTION IF EXISTS public.update_grid_content_secure;
+DROP FUNCTION IF EXISTS public.handle_grid_image_upload;
+DROP FUNCTION IF EXISTS public.verify_grid_edit_access;
+
 -- Function to handle image uploads with subscription ID and email verification
 CREATE OR REPLACE FUNCTION public.handle_grid_image_upload(
     p_subscription_id TEXT,
@@ -74,6 +79,11 @@ BEGIN
     RETURNING *;
 END;
 $$;
+
+-- Drop existing policies if they exist to avoid errors
+DROP POLICY IF EXISTS "Upload grid images with subscription ID verification" ON storage.objects;
+DROP POLICY IF EXISTS "Update grid images with subscription ID verification" ON storage.objects;
+DROP POLICY IF EXISTS "Delete grid images with subscription ID verification" ON storage.objects;
 
 -- Create storage policy for image uploads with subscription ID verification
 CREATE POLICY "Upload grid images with subscription ID verification"

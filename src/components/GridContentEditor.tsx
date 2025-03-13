@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Grid, ContentEditorProps } from '@/types';
 import { CONTENT_LIMITS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -25,8 +25,15 @@ export default function GridContentEditor({
   const { toast } = useToast();
   
   // New state for image preview and file to upload
-  const [previewImage, setPreviewImage] = useState<string | null>(grid.image_url || null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+
+  // Set initial preview image from grid data
+  useEffect(() => {
+    if (grid.image_url) {
+      setPreviewImage(grid.image_url);
+    }
+  }, [grid.image_url]);
 
   const validateImage = async (file: File): Promise<boolean> => {
     // Check file size (max 2MB)
@@ -45,6 +52,44 @@ export default function GridContentEditor({
     return true;
   };
 
+  const optimizeImage = async (file: File): Promise<File> => {
+    try {
+      // Create form data for the optimization API
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('format', 'webp'); // Use WebP for better compression
+      formData.append('quality', '80');
+      formData.append('maxWidth', '1200');
+      formData.append('maxHeight', '1200');
+
+      // Call the optimization API
+      const response = await fetch('/api/images/optimize', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to optimize image');
+      }
+
+      // Get the optimized image as a blob
+      const blob = await response.blob();
+      
+      // Create a new file from the blob
+      const optimizedFile = new File(
+        [blob],
+        file.name.replace(/\.[^/.]+$/, '.webp'),
+        { type: 'image/webp' }
+      );
+
+      return optimizedFile;
+    } catch (error) {
+      console.error('Error optimizing image:', error);
+      // If optimization fails, return the original file
+      return file;
+    }
+  };
+
   const uploadToSupabase = async (file: File): Promise<string> => {
     // Generate a unique file name
     const timestamp = Date.now();
@@ -53,6 +98,9 @@ export default function GridContentEditor({
     const bucketName = 'grid-images';
 
     try {
+      // Optimize the image before uploading
+      const optimizedFile = await optimizeImage(file);
+      
       // Set subscription ID in headers for storage policy verification
       const headers = subscriptionId ? {
         'x-subscription-id': subscriptionId
@@ -61,7 +109,7 @@ export default function GridContentEditor({
       // Upload the file with subscription ID in headers
       const { data, error } = await supabase.storage
         .from(bucketName)
-        .upload(`temp/${fileName}`, file, {
+        .upload(fileName, optimizedFile, {
           cacheControl: '3600',
           upsert: false,
           ...(headers && { headers })
@@ -71,26 +119,28 @@ export default function GridContentEditor({
         throw new Error(`Failed to upload to Supabase: ${error.message}`);
       }
 
-      // Get the temporary public URL
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
-        .getPublicUrl(`temp/${fileName}`);
+        .getPublicUrl(fileName);
 
-      // Now call a function to move the file to the proper location and update the grid
-      const { data: gridData, error: funcError } = await supabase
-        .rpc('handle_grid_image_upload', {
+      // Update the grid with the new image URL
+      const { data: updateData, error: updateError } = await supabase
+        .rpc('update_grid_content_secure', {
           p_grid_id: grid.id,
-          p_file_path: `temp/${fileName}`,
-          p_subscription_id: subscriptionId,
-          p_email: email || ''
+          p_title: title || null,
+          p_description: description || null,
+          p_external_url: externalUrl || null,
+          p_image_url: publicUrl,
+          p_subscription_id: subscriptionId || null,
+          p_email: email || null
         });
 
-      if (funcError) {
-        throw new Error(`Failed to process image: ${funcError.message}`);
+      if (updateError) {
+        throw new Error(`Failed to update grid with image URL: ${updateError.message}`);
       }
 
-      // Return the URL from the function instead of the temporary URL
-      return gridData || publicUrl;
+      return publicUrl;
     } catch (err) {
       console.error("Upload error:", err);
       throw err;
@@ -172,29 +222,27 @@ export default function GridContentEditor({
       // If there's a new file to upload, upload it first
       if (fileToUpload) {
         finalImageUrl = await uploadToSupabase(fileToUpload);
+        // Update the image URL state with the final URL
+        setImageUrl(finalImageUrl);
+        // Clear the file to upload since it's been processed
+        setFileToUpload(null);
       }
       
       // Call the secure function to update grid content
       const { data, error: updateError } = await supabase
         .rpc('update_grid_content_secure', {
           p_grid_id: grid.id,
-          p_title: title,
-          p_description: description,
-          p_external_url: externalUrl,
-          p_image_url: finalImageUrl,
-          p_subscription_id: subscriptionId,
-          p_email: email
+          p_title: title || null,
+          p_description: description || null,
+          p_external_url: externalUrl || null,
+          p_image_url: finalImageUrl || null,
+          p_subscription_id: subscriptionId || null,
+          p_email: email || null
         });
 
       if (updateError) {
         throw new Error(`Failed to save changes: ${updateError.message}`);
       }
-
-      // Update the image URL state with the final URL
-      setImageUrl(finalImageUrl);
-      
-      // Clear the file to upload since it's been processed
-      setFileToUpload(null);
       
       // Call onSave with the updated data for client-side state updates
       if (data && data.length > 0) {
@@ -220,6 +268,16 @@ export default function GridContentEditor({
       setLoading(false);
     }
   };
+
+  // Clean up object URLs when component unmounts or when preview changes
+  useEffect(() => {
+    return () => {
+      // Only revoke if it's a blob URL (not a remote URL)
+      if (previewImage && previewImage.startsWith('blob:')) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
@@ -309,6 +367,7 @@ export default function GridContentEditor({
                   src={previewImage}
                   alt="Grid content"
                   className="max-h-32 max-w-full object-contain rounded-md mb-2"
+                  key={previewImage}
                 />
                 <p className="text-sm text-gray-500">Click or drag to replace</p>
                 {fileToUpload && (

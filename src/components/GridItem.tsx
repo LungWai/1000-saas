@@ -41,6 +41,8 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   const [zIndex, setZIndex] = useState(10);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const [lastClickTime, setLastClickTime] = useState<number>(0);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   
   // Reset states when forceRecalculation changes
   useEffect(() => {
@@ -69,6 +71,13 @@ const GridItem: React.FC<ExtendedGridProps> = ({
       setZIndex(perimeterInfo.isPerimeter ? 15 : 10);
     }
   }, [isHovered, perimeterInfo.isPerimeter]);
+
+  // Update image preview when imageUrl changes
+  useEffect(() => {
+    if (imageUrl) {
+      setImagePreviewUrl(imageUrl);
+    }
+  }, [imageUrl]);
 
   // Safety check for content to prevent rendering issues
   const hasValidContent = (): boolean => {
@@ -277,15 +286,98 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         throw new Error(userMessage);
       }
 
-      // Success - close modal and refresh the page
+      // Success - close modal and reset states
       setIsEditModalOpen(false);
-      // Refresh the page to see updated content
+      
+      // Reset hover state
+      setIsHovered(false);
+      
+      // Reset z-index
+      setZIndex(perimeterInfo.isPerimeter ? 15 : 10);
+      
+      // Clear any pending hover timeouts
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      
+      // Reset the grid's hover and z-index state
+      if (gridRef.current) {
+        // Force immediate style reset
+        gridRef.current.style.cssText = `
+          z-index: ${perimeterInfo.isPerimeter ? 15 : 10} !important;
+          transform: scale(1) !important;
+          transform-origin: ${getTransformOrigin ? getTransformOrigin() : 'center center'} !important;
+          transition: none !important;
+          pointer-events: none !important;
+        `;
+        
+        // Remove any hover-related attributes and classes
+        gridRef.current.setAttribute('data-hovered', 'false');
+        gridRef.current.classList.remove('z-[100]', 'z-[120]');
+        
+        // Force a repaint
+        void gridRef.current.offsetHeight;
+        
+        // Restore normal styles and interactions after a delay
+        setTimeout(() => {
+          if (gridRef.current) {
+            gridRef.current.style.cssText = `
+              z-index: ${perimeterInfo.isPerimeter ? 15 : 10};
+              transform: scale(1);
+              transform-origin: ${getTransformOrigin ? getTransformOrigin() : 'center center'};
+              pointer-events: auto;
+            `;
+          }
+        }, 300); // Match transition duration
+      }
+      
+      // Notify parent that hover state has changed
+      if (onHoverStateChange) {
+        onHoverStateChange(id, false);
+      }
+      
+      // Prevent any new hover effects temporarily
+      document.body.classList.add('modal-closing');
+      setTimeout(() => {
+        document.body.classList.remove('modal-closing');
+      }, 500);
+
+      // Update the grid content with the response data
+      const updatedGrid = responseData;
+      if (updatedGrid) {
+        // Update local state with new data
+        if (updatedGrid.image_url) {
+          imageUrl = updatedGrid.image_url;
+        }
+        if (updatedGrid.title) {
+          title = updatedGrid.title;
+        }
+        if (updatedGrid.description) {
+          description = updatedGrid.description;
+        }
+        if (updatedGrid.external_url) {
+          externalUrl = updatedGrid.external_url;
+        }
+      }
+
+      // Force a re-render of the component
       window.location.reload();
     } catch (error) {
       console.error('Error updating grid:', error);
       // Show the error to the user
       alert(error instanceof Error ? error.message : 'An error occurred while updating the grid');
     }
+  };
+
+  const handleClick = () => {
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 300) { // Double click threshold
+      if (externalUrl) {
+        window.open(externalUrl, '_blank');
+      }
+    }
+    setLastClickTime(currentTime);
   };
 
   const transformOrigin = getTransformOrigin ? getTransformOrigin() : 'center center';
@@ -328,6 +420,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         onBlur={handleBlur}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
         tabIndex={0}
         role="button"
         aria-label={`Grid ${id}`}
@@ -350,17 +443,20 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         >
           {!isEmpty && (
             <>
-              {imageUrl && (
-                <img
-                  src={imageUrl}
-                  alt={title || 'Grid content'}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+              {imagePreviewUrl && (
+                <div className="absolute inset-0">
+                  <img
+                    src={imagePreviewUrl}
+                    alt={title || 'Grid content'}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    key={imagePreviewUrl}
+                  />
+                </div>
               )}
               
               {/* Only show title in non-hover state if no content or image is present - SMALLER SIZE */}
-              {!isHovered && title && (!imageUrl || (!hasValidContent() && !description)) && (
+              {!isHovered && title && (!imagePreviewUrl || (!hasValidContent() && !description)) && (
                 <div className="grid-title-legend">
                   <p className="grid-title-small">{title}</p>
                 </div>
