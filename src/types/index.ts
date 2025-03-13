@@ -88,6 +88,8 @@ export interface EditResponse {
 export interface ContentEditorProps {
   grid: Grid;
   onSave: (updates: Partial<Grid>) => Promise<void>;
+  subscriptionId?: string;
+  email?: string;
 }
 
 export interface EditModalProps {

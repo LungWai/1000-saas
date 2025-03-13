@@ -80,7 +80,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         toast({
           title: "Verification successful",
           description: `You are the verified Grid ${credentials.gridId || gridId} owner!`,
-          variant: "success",
+          variant: "default",
         });
       } catch (fetchError) {
         console.error('Error fetching grid:', fetchError);
@@ -89,7 +89,7 @@ export const EditModal: React.FC<EditModalProps> = ({
         toast({
           title: "Verification successful",
           description: "Verified, but couldn't load existing content",
-          variant: "warning",
+          variant: "default",
         });
       }
     } catch (err) {
@@ -120,7 +120,7 @@ export const EditModal: React.FC<EditModalProps> = ({
       toast({
         title: "Success",
         description: "Grid content updated successfully!",
-        variant: "success",
+        variant: "default",
       });
       onClose();
     } catch (err) {
@@ -174,7 +174,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                   required
                 />
                 <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                  Enter your Subscription ID (starts with "sub_") or Customer ID (starts with "cus_"). 
+                  Enter your Subscription ID (starts with "sub_"). 
                   This information was sent to your email after purchase.
                 </p>
               </div>
@@ -247,6 +247,8 @@ export const EditModal: React.FC<EditModalProps> = ({
                 <GridContentEditor 
                   grid={gridData}
                   onSave={handleContentSave}
+                  subscriptionId={credentials.subscriptionId}
+                  email={credentials.email}
                 />
                 
                 <div className="flex justify-end space-x-3 mt-6">

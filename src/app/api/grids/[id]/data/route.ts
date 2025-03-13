@@ -7,14 +7,16 @@ export async function GET(
 ) {
   try {
     // Make sure we have the ID parameter
-    if (!params || !params.id) {
+    const resolvedParams = await Promise.resolve(params);
+    
+    if (!resolvedParams || !resolvedParams.id) {
       return NextResponse.json(
         { error: 'Missing grid ID' },
         { status: 400 }
       );
     }
     
-    const id = params.id;
+    const id = resolvedParams.id;
     const grid = await getGridById(id);
     
     if (!grid) {

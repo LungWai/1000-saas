@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { optimizeImage, generateThumbnail } from '@/lib/image-optimizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,38 +14,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const gridId = params.id;
+    const resolvedParams = await Promise.resolve(params);
+    const gridId = resolvedParams.id;
     
-    // Verify subscription from Authorization header
-    const subscriptionId = request.headers.get('Authorization')?.replace('Bearer ', '');
-    if (!subscriptionId) {
-      return NextResponse.json(
-        { error: 'Missing authorization' },
-        { status: 401 }
-      );
-    }
-
-    // Verify subscription is active and matches grid
-    const { data: subscription, error: subError } = await supabase
-      .from('subscriptions')
-      .select('status, grid_id')
-      .eq('id', subscriptionId)
-      .single();
-
-    if (subError || !subscription || subscription.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Invalid or inactive subscription' },
-        { status: 403 }
-      );
-    }
-
-    if (subscription.grid_id !== gridId) {
-      return NextResponse.json(
-        { error: 'Subscription is not for this grid' },
-        { status: 403 }
-      );
-    }
-
+    // Parse the form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -73,62 +44,39 @@ export async function POST(
       );
     }
 
-    // Convert File to Buffer
+    // Convert File to Buffer for upload
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Optimize image and generate thumbnail
-    const [optimizedBuffer, thumbnailBuffer] = await Promise.all([
-      optimizeImage(buffer),
-      generateThumbnail(buffer),
-    ]);
-
-    // Generate unique filenames
+    // Generate unique filename
     const timestamp = Date.now();
-    const mainFilename = `${gridId}-${timestamp}-main.webp`;
-    const thumbnailFilename = `${gridId}-${timestamp}-thumb.webp`;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${gridId}-${timestamp}.${fileExt}`;
 
-    // Upload both versions to Supabase Storage
-    const [mainUpload, thumbnailUpload] = await Promise.all([
-      supabase.storage
-        .from('grid-images')
-        .upload(mainFilename, optimizedBuffer, {
-          contentType: 'image/webp',
-          cacheControl: '3600',
-          upsert: false,
-        }),
-      supabase.storage
-        .from('grid-images')
-        .upload(thumbnailFilename, thumbnailBuffer, {
-          contentType: 'image/webp',
-          cacheControl: '3600',
-          upsert: false,
-        }),
-    ]);
-
-    if (mainUpload.error || thumbnailUpload.error) {
-      console.error('Error uploading files:', {
-        main: mainUpload.error,
-        thumbnail: thumbnailUpload.error,
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('grid-images')
+      .upload(fileName, buffer, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: false,
       });
+
+    if (error) {
+      console.error('Error uploading to Supabase:', error);
       return NextResponse.json(
-        { error: 'Failed to upload files' },
+        { error: `Failed to upload image: ${error.message}` },
         { status: 500 }
       );
     }
 
-    // Get public URLs
-    const { data: { publicUrl: mainUrl } } = supabase.storage
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
       .from('grid-images')
-      .getPublicUrl(mainFilename);
-
-    const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-      .from('grid-images')
-      .getPublicUrl(thumbnailFilename);
+      .getPublicUrl(fileName);
 
     return NextResponse.json({
-      url: mainUrl,
-      thumbnailUrl,
+      url: publicUrl,
     });
   } catch (error) {
     console.error('Error handling file upload:', error);

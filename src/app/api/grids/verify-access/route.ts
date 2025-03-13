@@ -121,7 +121,8 @@ export async function POST(request: Request) {
     // Verification successful, return user ID for further operations
     return NextResponse.json({ 
       verified: true, 
-      userId 
+      userId,
+      subscriptionId
     });
     
   } catch (error) {

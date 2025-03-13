@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function GridContentEditor({
   grid,
   onSave,
+  subscriptionId,
+  email,
 }: ContentEditorProps) {
   const [title, setTitle] = useState(grid.title || '');
   const [description, setDescription] = useState(grid.description || '');
@@ -21,6 +23,10 @@ export default function GridContentEditor({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  // New state for image preview and file to upload
+  const [previewImage, setPreviewImage] = useState<string | null>(grid.image_url || null);
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
 
   const validateImage = async (file: File): Promise<boolean> => {
     // Check file size (max 2MB)
@@ -46,66 +52,89 @@ export default function GridContentEditor({
     const fileName = `${grid.id}-${timestamp}.${fileExt}`;
     const bucketName = 'grid-images';
 
-    // Upload file to Supabase bucket
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      throw new Error(`Failed to upload to Supabase: ${error.message}`);
-    }
-
-    // Get the public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
-  const handleImageUpload = async (file: File) => {
     try {
-      setError(null);
-      setLoading(true);
+      // Set subscription ID in headers for storage policy verification
+      const headers = subscriptionId ? {
+        'x-subscription-id': subscriptionId
+      } : undefined;
 
-      const isValid = await validateImage(file);
-      if (!isValid) {
-        setLoading(false);
-        return;
+      // Upload the file with subscription ID in headers
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(`temp/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false,
+          ...(headers && { headers })
+        });
+
+      if (error) {
+        throw new Error(`Failed to upload to Supabase: ${error.message}`);
       }
 
-      // Upload to Supabase and get public URL
-      const publicUrl = await uploadToSupabase(file);
+      // Get the temporary public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(`temp/${fileName}`);
+
+      // Now call a function to move the file to the proper location and update the grid
+      const { data: gridData, error: funcError } = await supabase
+        .rpc('handle_grid_image_upload', {
+          p_grid_id: grid.id,
+          p_file_path: `temp/${fileName}`,
+          p_subscription_id: subscriptionId,
+          p_email: email || ''
+        });
+
+      if (funcError) {
+        throw new Error(`Failed to process image: ${funcError.message}`);
+      }
+
+      // Return the URL from the function instead of the temporary URL
+      return gridData || publicUrl;
+    } catch (err) {
+      console.error("Upload error:", err);
+      throw err;
+    }
+  };
+
+  const handleImageSelect = async (file: File) => {
+    try {
+      setError(null);
       
-      // Update state with the new image URL
-      setImageUrl(publicUrl);
+      const isValid = await validateImage(file);
+      if (!isValid) {
+        return;
+      }
+      
+      // Create a local preview URL
+      const localPreviewUrl = URL.createObjectURL(file);
+      setPreviewImage(localPreviewUrl);
+      
+      // Store the file for later upload
+      setFileToUpload(file);
       
       toast({
-        title: "Image Uploaded",
-        description: "Your image has been successfully uploaded.",
+        title: "Image Selected",
+        description: "Your image will be uploaded when you save changes.",
         variant: "default",
         duration: 3000,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload image');
+      console.error("Image selection error:", err);
+      setError(err instanceof Error ? err.message : 'Failed to select image');
       toast({
-        title: "Upload Failed",
-        description: err instanceof Error ? err.message : 'Failed to upload image',
+        title: "Selection Failed",
+        description: err instanceof Error ? err.message : 'Failed to select image',
         variant: "destructive",
         duration: 3000,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await handleImageUpload(file);
+    await handleImageSelect(file);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -124,7 +153,7 @@ export default function GridContentEditor({
     
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-    await handleImageUpload(file);
+    await handleImageSelect(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,13 +167,39 @@ export default function GridContentEditor({
         throw new Error('External URL must start with https://');
       }
 
-      // Save all changes including the image URL
-      await onSave({
-        title,
-        description,
-        external_url: externalUrl,
-        image_url: imageUrl,
-      });
+      let finalImageUrl = imageUrl;
+      
+      // If there's a new file to upload, upload it first
+      if (fileToUpload) {
+        finalImageUrl = await uploadToSupabase(fileToUpload);
+      }
+      
+      // Call the secure function to update grid content
+      const { data, error: updateError } = await supabase
+        .rpc('update_grid_content_secure', {
+          p_grid_id: grid.id,
+          p_title: title,
+          p_description: description,
+          p_external_url: externalUrl,
+          p_image_url: finalImageUrl,
+          p_subscription_id: subscriptionId,
+          p_email: email
+        });
+
+      if (updateError) {
+        throw new Error(`Failed to save changes: ${updateError.message}`);
+      }
+
+      // Update the image URL state with the final URL
+      setImageUrl(finalImageUrl);
+      
+      // Clear the file to upload since it's been processed
+      setFileToUpload(null);
+      
+      // Call onSave with the updated data for client-side state updates
+      if (data && data.length > 0) {
+        await onSave(data[0]);
+      }
       
       toast({
         title: "Changes Saved",
@@ -153,6 +208,7 @@ export default function GridContentEditor({
         duration: 3000,
       });
     } catch (err) {
+      console.error("Save error:", err);
       setError(err instanceof Error ? err.message : 'Failed to save changes');
       toast({
         title: "Save Failed",
@@ -247,14 +303,19 @@ export default function GridContentEditor({
               className="hidden"
             />
             
-            {imageUrl ? (
+            {previewImage ? (
               <div className="relative w-full h-full flex flex-col items-center justify-center">
                 <img
-                  src={imageUrl}
+                  src={previewImage}
                   alt="Grid content"
                   className="max-h-32 max-w-full object-contain rounded-md mb-2"
                 />
                 <p className="text-sm text-gray-500">Click or drag to replace</p>
+                {fileToUpload && (
+                  <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                    New
+                  </span>
+                )}
               </div>
             ) : (
               <div className="text-center">
@@ -270,7 +331,7 @@ export default function GridContentEditor({
           </div>
           
           <p className="mt-1 text-xs text-gray-500">
-            Your image will be stored in a secure Supabase bucket.
+            {fileToUpload ? 'Image will be uploaded when you save changes.' : 'Your image will be stored in a secure Supabase bucket.'}
           </p>
         </div>
       </div>

@@ -17,7 +17,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const gridId = params.id;
+    const resolvedParams = await Promise.resolve(params);
+    const gridId = resolvedParams.id;
     const body = await request.json();
     const { subscriptionId, email, updates } = body;
 

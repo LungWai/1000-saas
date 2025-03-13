@@ -22,6 +22,7 @@ export async function PUT(
   try {
     const body = await request.json();
     const { subscriptionId, email, external_url } = updateSchema.parse(body);
+    const resolvedParams = await Promise.resolve(params);
 
     // Verify subscription
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -50,7 +51,7 @@ export async function PUT(
     }
 
     const updatedGrid = await updateGridUrl(
-      params.id,
+      resolvedParams.id,
       subscription.customer as string,
       external_url
     );

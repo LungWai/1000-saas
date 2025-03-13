@@ -12,7 +12,7 @@ function SuccessContent() {
   const router = useRouter();
   const { toast } = useToast();
   const sessionId = searchParams.get('session_id');
-  const gridId = searchParams.get('grid_id');
+  const gridId = searchParams.get('grid');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isContentEditorOpen, setIsContentEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,10 +26,11 @@ function SuccessContent() {
       // Fetch the grid data directly from our API
       const fetchGridData = async () => {
         try {
-          const response = await fetch(`/api/grids/${gridId}`);
+          const response = await fetch(`/api/grids/${gridId}/data`);
           
           if (!response.ok) {
-            throw new Error('Failed to fetch grid data');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch grid data');
           }
           
           const data = await response.json();
@@ -83,16 +84,17 @@ function SuccessContent() {
         }),
       });
       
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update grid content');
+        throw new Error(responseData.error || 'Failed to update grid content');
       }
       
       // Success - show confirmation and redirect
       toast({
         title: "Success",
         description: "Your grid content has been updated successfully!",
-        variant: "success",
+        variant: "default",
       });
       
       // Redirect after a short delay
@@ -134,7 +136,6 @@ function SuccessContent() {
       
       if (!response.ok) {
         const errorMessage = responseData.error || 'Failed to update grid content';
-        console.error('Grid update error:', errorMessage);
         
         // Show specific user-friendly error messages based on error type
         let userMessage = errorMessage;
@@ -153,7 +154,7 @@ function SuccessContent() {
         setError(userMessage);
         throw new Error(userMessage);
       }
-
+      
       // Success - close modal and redirect
       setIsEditModalOpen(false);
       router.push('/');
@@ -210,6 +211,8 @@ function SuccessContent() {
             <GridContentEditor 
               grid={gridData}
               onSave={handleSaveContent}
+              subscriptionId={searchParams.get('subscription_id') || undefined}
+              email={searchParams.get('email') || undefined}
             />
             <div className="mt-4 text-right">
               <button

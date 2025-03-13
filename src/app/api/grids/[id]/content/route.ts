@@ -27,7 +27,8 @@ export async function PUT(
   try {
     const body = await request.json();
     const { subscriptionId, email, ...validatedData } = updateSchema.parse(body);
-    const gridId = params.id;
+    const resolvedParams = await Promise.resolve(params);
+    const gridId = resolvedParams.id;
 
     // Check if the provided ID is a customer ID (starting with 'cus_') or subscription ID (starting with 'sub_')
     const isCustomerId = subscriptionId.startsWith('cus_');
