@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const { gridId, email, billingCycle, returnUrl } = await request.json();
     
-    console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/checkout/create-session - POST - Grid ID: ${gridId}, Email: ${email}, Billing Cycle: ${billingCycle}`);
+    // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/checkout/create-session - POST - Grid ID: ${gridId}, Email: ${email}, Billing Cycle: ${billingCycle}`);
 
     if (!gridId) {
       return NextResponse.json(

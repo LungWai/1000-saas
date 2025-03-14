@@ -72,12 +72,45 @@ const GridItem: React.FC<ExtendedGridProps> = ({
     }
   }, [isHovered, perimeterInfo.isPerimeter]);
 
+  // Utility function to validate image URLs
+  const validateImageUrl = (url: string | undefined | null): string | null => {
+    if (!url) return null;
+    
+    // If it's already a valid URL, return it
+    if (url.startsWith('http') || url.startsWith('/')) {
+      return url;
+    }
+    
+    // If it's a relative URL without a leading slash, add one
+    if (!url.startsWith('./') && !url.startsWith('/')) {
+      return '/' + url;
+    }
+    
+    // If we can't validate it, return null
+    return null;
+  };
+
+  // Check if an image exists at the given URL
+  const checkImageExists = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      console.error(`Failed to check image existence for ${url}:`, error);
+      return false;
+    }
+  };
+
   // Update image preview when imageUrl changes
   useEffect(() => {
-    if (imageUrl) {
-      setImagePreviewUrl(imageUrl);
-    }
-  }, [imageUrl]);
+    // Validate the URL before setting it
+    const validatedUrl = validateImageUrl(imageUrl);
+    
+    // Always update the state, even if imageUrl is null/undefined
+    setImagePreviewUrl(validatedUrl);
+    
+    // Don't include imagePreviewUrl in the dependency array to avoid loops
+  }, [imageUrl, id]);
 
   // Safety check for content to prevent rendering issues
   const hasValidContent = (): boolean => {
@@ -449,8 +482,33 @@ const GridItem: React.FC<ExtendedGridProps> = ({
                     src={imagePreviewUrl}
                     alt={title || 'Grid content'}
                     className="w-full h-full object-cover"
-                    loading="lazy"
+                    loading="eager"
                     key={imagePreviewUrl}
+                    onError={(e) => {
+                      const imgElement = e.target as HTMLImageElement;
+                      const failedUrl = imgElement.src;
+                      
+                      // Check if this might be a CORS issue
+                      const isCorsIssue = failedUrl.includes('supabase.co') && 
+                        !failedUrl.startsWith(window.location.origin);
+                      
+                      if (isCorsIssue) {
+                        // Try to create a proxy URL if it's a Supabase storage URL
+                        if (failedUrl.includes('storage/v1/object/public/')) {
+                          // Extract the path part after 'public/'
+                          const pathMatch = failedUrl.match(/public\/([^?]+)/);
+                          if (pathMatch && pathMatch[1]) {
+                            const proxyUrl = `/api/images/proxy?path=${encodeURIComponent(pathMatch[1])}`;
+                            imgElement.src = proxyUrl;
+                            return; // Exit early to give the proxy a chance
+                          }
+                        }
+                      }
+                      
+                      // Fallback to a placeholder if image fails to load
+                      imgElement.src = 'https://placehold.co/600x400?text=Image+Error';
+                      imgElement.style.backgroundColor = '#f0f0f0';
+                    }}
                   />
                 </div>
               )}

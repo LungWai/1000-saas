@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { gridId, email, billingCycle } = subscribeSchema.parse(body);
     
-    console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/subscribe - POST - Grid ID: ${gridId}, Email: ${email}, Billing Cycle: ${billingCycle}`);
+    // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/subscribe - POST - Grid ID: ${gridId}, Email: ${email}, Billing Cycle: ${billingCycle}`);
 
     // Get the actual grid price from the database
     const grid = await getGridById(gridId);

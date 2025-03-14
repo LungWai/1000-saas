@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { subscriptionId, email, gridId } = body;
     
-    console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/verify-access - POST - Grid ID: ${gridId}, Email: ${email}, Subscription ID: ${subscriptionId}`);
+    // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/verify-access - POST - Grid ID: ${gridId}, Email: ${email}, Subscription ID: ${subscriptionId}`);
 
     if (!subscriptionId || !email || !gridId) {
       return NextResponse.json(

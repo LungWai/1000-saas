@@ -5,7 +5,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/data - GET - ID: ${params.id}`);
+  // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/data - GET - ID: ${params.id}`);
   try {
     // Make sure we have the ID parameter
     const resolvedParams = await Promise.resolve(params);

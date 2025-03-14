@@ -26,7 +26,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/user/subscription/[id] - PUT - Subscription ID: ${params.id}`);
+  // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/user/subscription/[id] - PUT - Subscription ID: ${params.id}`);
   try {
     const body = await request.json();
     const { billing_cycle, cancel_at_period_end } = updateSchema.parse(body);

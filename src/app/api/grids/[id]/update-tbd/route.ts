@@ -16,7 +16,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/update - PUT - ID: ${params.id}`);
+  // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/update - PUT - ID: ${params.id}`);
   try {
     const resolvedParams = await Promise.resolve(params);
     const gridId = resolvedParams.id;

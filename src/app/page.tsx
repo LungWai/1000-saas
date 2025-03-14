@@ -103,17 +103,48 @@ export default function Home() {
         return a.id.localeCompare(b.id);
       });
 
-      const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => ({
-        id: grid.id.toString(),
-        status: grid.status === 'active' ? 'leased' : 'empty',
-        price: typeof grid.price === 'number' ? grid.price : PRICING.BASE_PRICE,
-        imageUrl: grid.image_url,
-        title: grid.title,
-        description: grid.description,
-        externalUrl: grid.external_url,
-        content: grid.content,
-        onPurchaseClick: () => handlePurchaseClick(grid.id.toString())
-      }));
+      const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => {
+        // Validate and fix image URL if needed
+        let validImageUrl = grid.image_url;
+        
+        // Check if URL is valid
+        if (validImageUrl) {
+          // If URL doesn't start with http or /, it might be a relative URL or invalid
+          if (!validImageUrl.startsWith('http') && !validImageUrl.startsWith('/')) {
+            // Try to fix by adding a leading slash if it's a relative path
+            if (!validImageUrl.startsWith('./')) {
+              validImageUrl = '/' + validImageUrl;
+            }
+          }
+          
+          // If URL is from Supabase storage but missing the base URL
+          if (validImageUrl.includes('storage/v1/object/public/')) {
+            // Add the Supabase URL if it's missing
+            if (!validImageUrl.startsWith('http')) {
+              validImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}${validImageUrl}`;
+            }
+            
+            // Create a proxy URL to avoid CORS issues
+            const pathMatch = validImageUrl.match(/public\/([^?]+)/);
+            if (pathMatch && pathMatch[1]) {
+              // Use our proxy endpoint instead of direct Supabase URL
+              validImageUrl = `/api/images/proxy?path=${encodeURIComponent(pathMatch[1])}`;
+            }
+          }
+        }
+        
+        return {
+          id: grid.id.toString(),
+          status: grid.status === 'active' ? 'leased' : 'empty',
+          price: typeof grid.price === 'number' ? grid.price : PRICING.BASE_PRICE,
+          imageUrl: validImageUrl,
+          title: grid.title,
+          description: grid.description,
+          externalUrl: grid.external_url,
+          content: grid.content,
+          onPurchaseClick: () => handlePurchaseClick(grid.id.toString())
+        };
+      });
 
       setGrids(formattedGrids);
     } catch (err) {

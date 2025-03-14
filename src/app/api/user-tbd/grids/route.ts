@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Get user ID from auth header
     const userId = request.headers.get('x-user-id');
     
-    console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/user/grids - GET - User ID: ${userId}`);
+    // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/user/grids - GET - User ID: ${userId}`);
     
     if (!userId) {
       return NextResponse.json(

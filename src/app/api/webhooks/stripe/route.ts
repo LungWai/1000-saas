@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         process.env.STRIPE_WEBHOOK_SECRET!
       );
       
-      console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/webhooks/stripe - POST - Event: ${event.type}`);
+      // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/webhooks/stripe - POST - Event: ${event.type}`);
       
     } catch (error) {
       console.error('Error verifying webhook signature:', error);
