@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getGrids } from '@/lib/db';
 
 export async function GET(request: Request) {
+  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids - GET`);
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');

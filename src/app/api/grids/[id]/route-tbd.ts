@@ -5,6 +5,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id] - GET - ID: ${params.id}`);
   try {
     const grid = await getGridById(params.id);
 

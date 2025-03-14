@@ -23,6 +23,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/content - PUT - ID: ${params.id}`);
   try {
     const body = await request.json();
     const { subscriptionId, email, ...validatedData } = updateSchema.parse(body);

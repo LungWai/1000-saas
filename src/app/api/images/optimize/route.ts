@@ -16,6 +16,9 @@ export async function POST(request: Request) {
 
     // Get optimization options from the request
     const format = formData.get('format') as 'jpeg' | 'webp' | 'png' || 'webp';
+    
+    console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/images/optimize - POST - File: ${file.name}, Format: ${format}`);
+    
     const quality = parseInt(formData.get('quality') as string || '80', 10);
     const maxWidth = parseInt(formData.get('maxWidth') as string || '1200', 10);
     const maxHeight = parseInt(formData.get('maxHeight') as string || '1200', 10);

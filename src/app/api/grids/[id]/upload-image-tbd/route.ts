@@ -13,6 +13,7 @@ export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/grids/[id]/upload-image - POST - ID: ${params.id}`);
   try {
     const resolvedParams = await Promise.resolve(params);
     const gridId = resolvedParams.id;

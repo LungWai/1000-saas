@@ -17,23 +17,25 @@ const isActiveCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.Del
 };
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  const headersList = await headers();
-  const signature = headersList.get('stripe-signature');
-
-  if (!signature) {
-    return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
-      { status: 400 }
-    );
-  }
-
   try {
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    const body = await request.text();
+    const signature = request.headers.get('stripe-signature') as string;
+
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+      
+      console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/webhooks/stripe - POST - Event: ${event.type}`);
+      
+    } catch (error) {
+      console.error('Error verifying webhook signature:', error);
+      return new NextResponse('Webhook signature verification failed', { status: 400 });
+    }
 
     console.log(`Processing webhook event: ${event.type}`);
 
