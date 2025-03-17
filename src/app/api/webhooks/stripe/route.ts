@@ -16,8 +16,29 @@ const isActiveCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.Del
   return !('deleted' in customer);
 };
 
+// Add explicit method handling
+export async function GET() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function PUT() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function DELETE() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function PATCH() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
 export async function POST(request: Request) {
   try {
+    // Add request method logging
+    console.log('Incoming webhook request method:', request.method);
+    console.log('Incoming webhook headers:', JSON.stringify(Object.fromEntries(request.headers.entries()), null, 2));
+    
     const body = await request.text();
     const signature = request.headers.get('stripe-signature') as string;
 

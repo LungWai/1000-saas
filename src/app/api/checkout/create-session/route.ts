@@ -7,6 +7,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
+// Add explicit method handling
+export async function GET() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function PUT() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function DELETE() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
+export async function PATCH() {
+  return new NextResponse('Method not allowed', { status: 405 });
+}
+
 export async function POST(request: Request) {
   try {
     const { gridId, email, billingCycle, returnUrl } = await request.json();
