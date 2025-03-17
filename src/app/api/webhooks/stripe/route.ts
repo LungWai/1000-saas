@@ -11,6 +11,10 @@ import {
 import { sendPurchaseConfirmation } from '@/lib/resend';
 import Stripe from 'stripe';
 
+// Add runtime config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // Add type guard for Stripe Customer
 const isActiveCustomer = (customer: Stripe.Response<Stripe.Customer | Stripe.DeletedCustomer>): customer is Stripe.Response<Stripe.Customer> => {
   return !('deleted' in customer);
@@ -39,19 +43,25 @@ export async function POST(request: Request) {
     console.log('Incoming webhook request method:', request.method);
     console.log('Incoming webhook headers:', JSON.stringify(Object.fromEntries(request.headers.entries()), null, 2));
     
-    const body = await request.text();
-    const signature = request.headers.get('stripe-signature') as string;
+    // Clone the request to ensure we can read the body
+    const rawBody = await request.text();
+    const signature = headers().get('stripe-signature') as string;
+
+    if (!signature) {
+      console.error('No stripe signature found');
+      return new NextResponse('No stripe signature', { status: 400 });
+    }
 
     let event: Stripe.Event;
 
     try {
       event = stripe.webhooks.constructEvent(
-        body,
+        rawBody,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
       
-      // console.log(`[ROUTE_TRACKER] ${new Date().toISOString()} - /api/webhooks/stripe - POST - Event: ${event.type}`);
+      console.log(`Webhook signature verified, processing event: ${event.type}`);
       
     } catch (error) {
       console.error('Error verifying webhook signature:', error);
