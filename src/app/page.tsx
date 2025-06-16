@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { GridProps } from '@/types';
-import GridContainer from '@/components/GridContainer';
 import { GRID_CONFIG, PRICING, COMPANY_INFO } from '@/lib/constants';
 import Image from 'next/image';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
@@ -14,18 +13,13 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import ThemeToggle from '@/components/ThemeToggle';
 import BackgroundManager, { useBackground } from '@/components/BackgroundManager';
 import Link from 'next/link';
+import { useGrids } from '@/hooks/useGrids';
+import { useUserPreferences, useRecentInteractions } from '@/hooks/useLocalStorage';
+import GridSkeleton from '@/components/GridSkeleton';
+import useToastNotification from '@/hooks/useToastNotification';
 
-// Add type for API response at the top with other imports
-interface GridResponse {
-  id: string;
-  status: 'active' | 'inactive' | 'pending';
-  price: number;
-  image_url?: string;
-  title?: string;
-  description?: string;
-  external_url?: string;
-  content?: string | null;
-}
+// Lazy load components that aren't needed for initial render
+const GridContainer = lazy(() => import('@/components/GridContainer'));
 
 // Create a wrapper component to ensure context is available
 function BackgroundProvider({ children }: { children: React.ReactNode }) {
@@ -37,15 +31,23 @@ function BackgroundProvider({ children }: { children: React.ReactNode }) {
 }
 
 export default function Home() {
-  const [grids, setGrids] = useState<GridProps[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { grids, isLoading, isError, error, fetchAllGrids, refreshGrids } = useGrids();
   const [headerVisible, setHeaderVisible] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
   const { toast } = useToast();
+  const toastNotification = useToastNotification();
+  const { updateLastVisitedPage } = useRecentInteractions();
+  const { preferences } = useUserPreferences();
+  
+  // Use a ref to track first render
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    fetchGrids();
+    // Only update the last visited page on the first render
+    if (isFirstRender.current) {
+      updateLastVisitedPage('/');
+      isFirstRender.current = false;
+    }
     
     // Add animation for header and hero
     const headerTimer = setTimeout(() => {
@@ -60,139 +62,82 @@ export default function Home() {
       clearTimeout(headerTimer);
       clearTimeout(heroTimer);
     };
-  }, []);
-
-  const fetchGrids = async () => {
-    try {
-      let allGrids: GridResponse[] = [];
-      let currentPage = 1;
-      let totalPages = 1;
-      
-      // First request to get total count
-      const initialResponse = await fetch('/api/grids?page=1&limit=200');
-      const initialData = await initialResponse.json();
-      
-      if (!initialResponse.ok) {
-        throw new Error(initialData.error || 'Failed to fetch grids');
-      }
-      
-      allGrids = [...initialData.grids];
-      totalPages = initialData.totalPages;
-      
-      // Fetch remaining pages if needed
-      for (let page = 2; page <= totalPages; page++) {
-        const response = await fetch(`/api/grids?page=${page}&limit=200`);
-        const data = await response.json();
-        
-        if (!response.ok) {
-          continue;
-        }
-        
-        allGrids = [...allGrids, ...data.grids];
-      }
-
-      if (allGrids.length === 0) {
-        setError('No grid data available. Please check your database connection.');
-        setLoading(false);
-        return;
-      }
-
-      // Sort grids by UUID, which ensures consistent order based on the database IDs
-      allGrids.sort((a, b) => {
-        // We're sorting by UUID instead of title numbers
-        return a.id.localeCompare(b.id);
-      });
-
-      const formattedGrids: GridProps[] = allGrids.map((grid: GridResponse) => {
-        // Validate and fix image URL if needed
-        let validImageUrl = grid.image_url;
-        
-        // Check if URL is valid
-        if (validImageUrl) {
-          // If URL doesn't start with http or /, it might be a relative URL or invalid
-          if (!validImageUrl.startsWith('http') && !validImageUrl.startsWith('/')) {
-            // Try to fix by adding a leading slash if it's a relative path
-            if (!validImageUrl.startsWith('./')) {
-              validImageUrl = '/' + validImageUrl;
-            }
-          }
-          
-          // If URL is from Supabase storage but missing the base URL
-          if (validImageUrl.includes('storage/v1/object/public/')) {
-            // Add the Supabase URL if it's missing
-            if (!validImageUrl.startsWith('http')) {
-              validImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}${validImageUrl}`;
-            }
-            
-            // Create a proxy URL to avoid CORS issues
-            const pathMatch = validImageUrl.match(/public\/([^?]+)/);
-            if (pathMatch && pathMatch[1]) {
-              // Use our proxy endpoint instead of direct Supabase URL
-              validImageUrl = `/api/images/proxy?path=${encodeURIComponent(pathMatch[1])}`;
-            }
-          }
-        }
-        
-        return {
-          id: grid.id.toString(),
-          status: grid.status === 'active' ? 'leased' : 'empty',
-          price: typeof grid.price === 'number' ? grid.price : PRICING.BASE_PRICE,
-          imageUrl: validImageUrl,
-          title: grid.title,
-          description: grid.description,
-          externalUrl: grid.external_url,
-          content: grid.content,
-          onPurchaseClick: () => handlePurchaseClick(grid.id.toString())
-        };
-      });
-
-      setGrids(formattedGrids);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load grids');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [updateLastVisitedPage]); // Keep in dependency array for consistency
 
   const handlePurchaseClick = (gridId: string) => {
     // Find the grid by ID to get its title
     const selectedGrid = grids.find(grid => grid.id === gridId);
     const gridTitle = selectedGrid?.title || `Grid #${gridId}`;
     
-    toast({
-      title: "Grid Selected",
-      description: `You selected ${gridTitle}. Proceeding to purchase...`,
-      variant: "default",
-      duration: 2300, // Show for 3 seconds
-    });
+    // Use the custom toast notification
+    toastNotification.showInfo(`You selected ${gridTitle}. Proceeding to purchase...`, "Grid Selected");
     console.log(`Purchase clicked for grid: ${gridId}`);
   };
 
-  if (loading) {
+  // Add onPurchaseClick to grid objects
+  const gridsWithHandlers = grids.map(grid => ({
+    ...grid,
+    onPurchaseClick: () => handlePurchaseClick(grid.id)
+  }));
+
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading grid spaces...</p>
-        </div>
-      </div>
+      <BackgroundProvider>
+        <main className="min-h-screen flex-col text-foreground relative z-10">
+          {/* Header */}
+          <header className={`w-full bg-card/40 border-b border-border py-5 backdrop-blur-sm transition-all duration-500 relative z-50 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+            <div className="max-w-[1200px] w-full mx-auto px-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                  <Link href="/">
+                    <Image 
+                      src="/logo.png" 
+                      alt="Logo" 
+                      width={96} 
+                      height={96} 
+                      className="h-16 w-auto"
+                      priority
+                    />
+                  </Link>
+                  <Link href="/" className="hover:opacity-80 transition-opacity">
+                    <h1 className="text-3xl font-medium tracking-tight">1000 SaaS Space</h1>
+                  </Link>
+                </div>
+                <div className="flex items-center gap-4">
+                  <RefreshBackgroundButton />
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Loading state with skeleton */}
+          <section className="w-full overflow-hidden bg-transparent py-12">
+            <div className="w-full max-w-[1500px] mx-auto">
+              <GridSkeleton 
+                count={GRID_CONFIG.TOTAL_GRIDS} 
+                columns={GRID_CONFIG.BREAKPOINTS.lg.columns} 
+              />
+            </div>
+          </section>
+        </main>
+      </BackgroundProvider>
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error Loading Data</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error?.message || 'Failed to load grids'}</AlertDescription>
           <Button 
             variant="outline"
             className="mt-4 w-full"
             onClick={() => {
-              setError(null);
-              setLoading(true);
-              fetchGrids();
+              toastNotification.showInfo("Trying to reload grid data...");
+              refreshGrids();
             }}
           >
             Try Again
@@ -261,12 +206,18 @@ export default function Home() {
         {/* Grid Container */}
         <section className="w-full overflow-hidden bg-transparent py-12">
           <div className="w-full max-w-[1500px] mx-auto">
-            <GridContainer
-              grids={grids}
-              containerSize={GRID_CONFIG.TOTAL_GRIDS}
-              columns={GRID_CONFIG.BREAKPOINTS.lg.columns}
-              onPurchaseClick={handlePurchaseClick}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            }>
+              <GridContainer
+                grids={gridsWithHandlers}
+                containerSize={GRID_CONFIG.TOTAL_GRIDS}
+                columns={GRID_CONFIG.BREAKPOINTS.lg.columns}
+                onPurchaseClick={handlePurchaseClick}
+              />
+            </Suspense>
           </div>
         </section>
 
@@ -318,9 +269,6 @@ function RefreshBackgroundButton() {
   const handleRefresh = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Log for debugging
-    console.log("RefreshBackgroundButton: context =", backgroundContext);
     
     // Prevent multiple clicks
     if (isRefreshing) return;

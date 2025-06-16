@@ -1,0 +1,95 @@
+{
+  "grids": [
+    {
+      "id": "1",
+      "status": "empty",
+      "price": 100,
+      "title": "Grid 1",
+      "description": "This is an empty grid"
+    },
+    {
+      "id": "2",
+      "status": "leased",
+      "price": 200,
+      "title": "Grid 2",
+      "description": "This is a leased grid",
+      "content": "Sample content for grid 2",
+      "imageUrl": "/images/sample.jpg"
+    },
+    {
+      "id": "3",
+      "status": "empty",
+      "price": 150,
+      "title": "Grid 3",
+      "description": "Another empty grid"
+    },
+    {
+      "id": "4",
+      "status": "leased",
+      "price": 250,
+      "title": "Grid 4",
+      "description": "Another leased grid",
+      "content": "Sample content for grid 4"
+    },
+    {
+      "id": "5",
+      "status": "empty",
+      "price": 100,
+      "title": "Grid 5",
+      "description": "This is an empty grid"
+    },
+    {
+      "id": "6",
+      "status": "empty",
+      "price": 175,
+      "title": "Grid 6",
+      "description": "This is an empty grid"
+    },
+    {
+      "id": "7",
+      "status": "leased",
+      "price": 225,
+      "title": "Grid 7",
+      "description": "This is a leased grid",
+      "content": "Sample content for grid 7"
+    },
+    {
+      "id": "8",
+      "status": "empty",
+      "price": 120,
+      "title": "Grid 8",
+      "description": "Another empty grid"
+    },
+    {
+      "id": "9",
+      "status": "leased",
+      "price": 180,
+      "title": "Grid 9",
+      "description": "Another leased grid",
+      "content": "Sample content for grid 9",
+      "imageUrl": "/images/sample2.jpg"
+    },
+    {
+      "id": "10",
+      "status": "empty",
+      "price": 140,
+      "title": "Grid 10",
+      "description": "This is an empty grid"
+    },
+    {
+      "id": "11",
+      "status": "empty",
+      "price": 130,
+      "title": "Grid 11",
+      "description": "This is an empty grid"
+    },
+    {
+      "id": "12",
+      "status": "leased",
+      "price": 210,
+      "title": "Grid 12",
+      "description": "This is a leased grid",
+      "content": "Sample content for grid 12"
+    }
+  ]
+} 

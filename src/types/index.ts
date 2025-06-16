@@ -16,6 +16,23 @@ export interface Grid {
   subscription_id: string;
 }
 
+export interface GridResponse {
+  id: string;
+  status: 'active' | 'inactive' | 'pending';
+  price: number;
+  image_url?: string;
+  title?: string;
+  description?: string;
+  external_url?: string;
+  content?: string | null;
+  subscription_id?: string;
+  user_id?: string;
+  start_date?: string;
+  end_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface User {
   id: string;
   email: string;

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "1",
+    "status": "empty",
+    "price": 100,
+    "title": "Test Grid 1",
+    "description": "This is a test grid"
+  },
+  {
+    "id": "2",
+    "status": "leased",
+    "price": 200,
+    "title": "Test Grid 2",
+    "description": "This is a leased grid for testing",
+    "content": "Sample content",
+    "customerId": "cust_123456",
+    "subscription_id": "sub_123456"
+  }
+] 

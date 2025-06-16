@@ -6,6 +6,8 @@ import GridHoverOverlay from './GridHoverOverlay';
 import { GRID_CONFIG } from '@/lib/constants';
 import { CSSProperties, MouseEvent, useState, useEffect, useRef } from 'react';
 import EditModal from './EditModal';
+import Image from 'next/image';
+import useToastNotification from '@/hooks/useToastNotification';
 
 interface ExtendedGridProps extends GridProps {
   isLoading?: boolean;
@@ -15,6 +17,10 @@ interface ExtendedGridProps extends GridProps {
   content?: string | null;
   perimeterInfo?: { isPerimeter: boolean; edges: string[] };
   forceRecalculation?: number;
+  onKeyboardNavigation?: (direction: 'up' | 'down' | 'left' | 'right', gridId: string) => void;
+  tabIndex?: number;
+  isFocused?: boolean;
+  'data-grid-id'?: string;
 }
 
 const GridItem: React.FC<ExtendedGridProps> = ({
@@ -33,6 +39,10 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   onHoverStateChange,
   perimeterInfo = { isPerimeter: false, edges: [] },
   forceRecalculation = 0,
+  onKeyboardNavigation,
+  tabIndex = 0,
+  isFocused = false,
+  'data-grid-id': dataGridId,
 }) => {
   const isEmpty = status === 'empty';
   const isLeased = status === 'leased';
@@ -43,6 +53,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   const gridRef = useRef<HTMLDivElement>(null);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const toast = useToastNotification();
   
   // Reset states when forceRecalculation changes
   useEffect(() => {
@@ -279,6 +290,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
   };
 
   const handleEditModalSubmit = async (data: EditAccess) => {
+    // Create a loading toast and store its ID to dismiss it later
+    const loadingToast = toast.showLoading("Updating grid content...");
+    
     try {
       // Submit edit data to server
       const response = await fetch(`/api/grids/${id}/content`, {
@@ -298,6 +312,9 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         responseData = { error: 'Failed to update grid content' };
       }
       
+      // Dismiss the loading toast
+      toast.dismiss(loadingToast.id);
+      
       if (!response.ok) {
         const errorMessage = responseData.error || 'Failed to update grid content';
         console.error('Grid update error:', errorMessage);
@@ -316,8 +333,13 @@ const GridItem: React.FC<ExtendedGridProps> = ({
           userMessage = 'You do not have permission to edit this grid.';
         }
         
+        // Show error toast instead of alert
+        toast.showError(userMessage);
         throw new Error(userMessage);
       }
+
+      // Show success toast
+      toast.showSuccess("Grid content updated successfully!");
 
       // Success - close modal and reset states
       setIsEditModalOpen(false);
@@ -376,30 +398,15 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         document.body.classList.remove('modal-closing');
       }, 500);
 
-      // Update the grid content with the response data
-      const updatedGrid = responseData;
-      if (updatedGrid) {
-        // Update local state with new data
-        if (updatedGrid.image_url) {
-          imageUrl = updatedGrid.image_url;
-        }
-        if (updatedGrid.title) {
-          title = updatedGrid.title;
-        }
-        if (updatedGrid.description) {
-          description = updatedGrid.description;
-        }
-        if (updatedGrid.external_url) {
-          externalUrl = updatedGrid.external_url;
-        }
-      }
-
-      // Force a re-render of the component
+      // Reload the page to show updated content
+      // This ensures we get fresh data from the server
       window.location.reload();
     } catch (error) {
       console.error('Error updating grid:', error);
-      // Show the error to the user
-      alert(error instanceof Error ? error.message : 'An error occurred while updating the grid');
+      // Show error toast instead of alert if it hasn't been shown already
+      if (error instanceof Error && !error.message.includes('The ID you entered')) {
+        toast.showError(error instanceof Error ? error.message : 'An error occurred while updating the grid');
+      }
     }
   };
 
@@ -415,6 +422,32 @@ const GridItem: React.FC<ExtendedGridProps> = ({
 
   const transformOrigin = getTransformOrigin ? getTransformOrigin() : 'center center';
 
+  // Handle keyboard events
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Handle Enter or Space to activate the grid
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleGridAction(id);
+    }
+    
+    // Handle arrow keys for navigation
+    if (onKeyboardNavigation) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        onKeyboardNavigation('up', id);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        onKeyboardNavigation('down', id);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onKeyboardNavigation('left', id);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onKeyboardNavigation('right', id);
+      }
+    }
+  };
+
   return (
     <>
       <div
@@ -426,7 +459,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
           overflow-hidden
           transition-all
           duration-300
-          ${isHovered ? (perimeterInfo.isPerimeter ? 'z-[120]' : 'z-[100]') : (perimeterInfo.isPerimeter ? 'z-[15]' : 'z-10')}
+          ${isHovered || isFocused ? (perimeterInfo.isPerimeter ? 'z-[120]' : 'z-[100]') : (perimeterInfo.isPerimeter ? 'z-[15]' : 'z-10')}
           outline-none
           focus:ring-2
           focus:ring-primary
@@ -442,7 +475,7 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         style={{
           aspectRatio: '1 / 1',
           willChange: 'transform',
-          transform: isHovered ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
+          transform: isHovered || isFocused ? `scale(${GRID_CONFIG.HOVER_SCALE})` : 'scale(1)',
           transformOrigin: getTransformOrigin ? getTransformOrigin() : 'center center',
           zIndex,
           ...style,
@@ -454,10 +487,11 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onClick={handleClick}
-        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        tabIndex={tabIndex}
         role="button"
-        aria-label={`Grid ${id}`}
-        data-grid-id={id}
+        aria-label={`Grid ${id}${title ? `: ${title}` : ''}${status === 'leased' ? ' (leased)' : ' (available)'}`}
+        data-grid-id={dataGridId || id}
         data-grid-status={status}
         data-hovered={isHovered ? "true" : "false"}
         data-perimeter={perimeterInfo.isPerimeter ? "true" : "false"}
@@ -476,45 +510,26 @@ const GridItem: React.FC<ExtendedGridProps> = ({
         >
           {!isEmpty && (
             <>
-              {imagePreviewUrl && (
-                <div className="absolute inset-0">
-                  <img
-                    src={imagePreviewUrl}
-                    alt={title || 'Grid content'}
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                    key={imagePreviewUrl}
-                    onError={(e) => {
-                      const imgElement = e.target as HTMLImageElement;
-                      const failedUrl = imgElement.src;
-                      
-                      // Check if this might be a CORS issue
-                      const isCorsIssue = failedUrl.includes('supabase.co') && 
-                        !failedUrl.startsWith(window.location.origin);
-                      
-                      if (isCorsIssue) {
-                        // Try to create a proxy URL if it's a Supabase storage URL
-                        if (failedUrl.includes('storage/v1/object/public/')) {
-                          // Extract the path part after 'public/'
-                          const pathMatch = failedUrl.match(/public\/([^?]+)/);
-                          if (pathMatch && pathMatch[1]) {
-                            const proxyUrl = `/api/images/proxy?path=${encodeURIComponent(pathMatch[1])}`;
-                            imgElement.src = proxyUrl;
-                            return; // Exit early to give the proxy a chance
-                          }
-                        }
-                      }
-                      
-                      // Fallback to a placeholder if image fails to load
-                      imgElement.src = 'https://placehold.co/600x400?text=Image+Error';
-                      imgElement.style.backgroundColor = '#f0f0f0';
-                    }}
+              {imageUrl && (
+                <div className={`${
+                  status === 'leased' ? 'opacity-100' : 'opacity-40'
+                  } w-full h-full absolute inset-0 transition-opacity duration-300 overflow-hidden`
+                }>
+                  <Image
+                    src={imageUrl}
+                    alt={title || `Grid ${id}`}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                   />
                 </div>
               )}
               
               {/* Only show title in non-hover state if no content or image is present - SMALLER SIZE */}
-              {!isHovered && title && (!imagePreviewUrl || (!hasValidContent() && !description)) && (
+              {!isHovered && title && (!imageUrl || (!hasValidContent() && !description)) && (
                 <div className="grid-title-legend">
                   <p className="grid-title-small">{title}</p>
                 </div>

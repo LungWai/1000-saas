@@ -143,59 +143,47 @@ export const EditModal: React.FC<EditModalProps> = ({
       style={{ backdropFilter: 'blur(4px)' }}
     >
       <div 
-        className={`rounded-lg p-6 w-full max-w-3xl ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-        style={{ 
-          boxShadow: isDarkMode ? '0 10px 25px -5px rgba(0, 0, 0, 0.5)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)'
-        }}
+        className="rounded-lg p-6 w-full max-w-3xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg border border-gray-200 dark:border-gray-700"
       >
         {!isVerified ? (
           <>
             <h2 className="text-xl font-semibold mb-4">Verify Grid Ownership</h2>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               Please enter your ID and email to verify your grid ownership.
             </p>
             
             <form onSubmit={handleVerification} className="space-y-4">
               <div>
-                <label htmlFor="subscriptionId" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label htmlFor="subscriptionId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Subscription or Customer ID
                 </label>
                 <input
                   type="text"
                   id="subscriptionId"
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400"
                   value={credentials.subscriptionId}
                   onChange={(e) => setCredentials(prev => ({ ...prev, subscriptionId: e.target.value }))}
                   required
                 />
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Enter your Subscription ID (starts with "sub_"). 
                   This information was sent to your email after purchase.
                 </p>
               </div>
 
               <div>
-                <label htmlFor="email" className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Purchase Email
                 </label>
                 <input
                   type="email"
                   id="email"
-                  className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'border-gray-300 bg-white text-gray-900'
-                  }`}
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400"
                   value={credentials.email}
                   onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
                   required
                 />
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   The email address you used during purchase.
                 </p>
               </div>
@@ -211,22 +199,14 @@ export const EditModal: React.FC<EditModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-4 py-2 text-sm font-medium rounded-md ${
-                    isDarkMode 
-                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-                    isLoading 
-                      ? 'bg-blue-400 cursor-not-allowed' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-md bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Verifying...' : 'Verify & Edit'}
                 </button>
@@ -237,7 +217,7 @@ export const EditModal: React.FC<EditModalProps> = ({
           <>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Edit Grid Content</h2>
-              <div className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-700' : 'bg-green-100'} ${isDarkMode ? 'text-green-100' : 'text-green-700'}`}>
+              <div className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-700 text-green-700 dark:text-green-100">
                 Verified ✓
               </div>
             </div>
@@ -255,11 +235,7 @@ export const EditModal: React.FC<EditModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className={`px-4 py-2 text-sm font-medium rounded-md ${
-                      isDarkMode 
-                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } transition-colors`}
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Cancel
                   </button>

@@ -14,7 +14,26 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Enable Next.js built-in image optimization
+    unoptimized: false,
+    // Add domains for remote image optimization
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.stripe.com',
+      },
+    ],
+    // Set reasonable image optimization defaults
+    formats: ['image/webp'],
+    minimumCacheTTL: 60,
   },
   experimental: {
     webpackBuildWorker: true,

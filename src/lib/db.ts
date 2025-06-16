@@ -8,7 +8,6 @@ export const getGrids = async (page = 1, limit = 200) => {
     const { data, error, count } = await supabase
       .from('grids')
       .select('*', { count: 'exact' })
-      .order('title')
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) {

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { GridContainerProps, GridProps } from '@/types';
 import GridItem from './GridItem';
 import { GRID_CONFIG, PRICING } from '@/lib/constants';
-import PurchaseModal from './PurchaseModal';
+import dynamic from 'next/dynamic';
 
 interface ExpandedGridState {
   id: string;
@@ -16,6 +16,34 @@ interface ExpandedGridState {
 
 interface ExtendedGridContainerProps extends GridContainerProps {
   onPurchaseClick: (gridId: string) => void;
+}
+
+// Dynamically import PurchaseModal
+const PurchaseModal = dynamic(() => import('./PurchaseModal'), {
+  loading: () => <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="animate-pulse">Loading...</div>
+  </div>,
+  ssr: false,
+});
+
+/**
+ * Natural sort algorithm for grid IDs
+ * This ensures that 1, 2, 3, ... 10, 11 sort correctly
+ */
+function naturalSort(a: string, b: string): number {
+  // If both are numeric strings, compare as numbers
+  const aMatch = a.match(/^(\d+)$/);
+  const bMatch = b.match(/^(\d+)$/);
+  
+  if (aMatch && bMatch) {
+    return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+  }
+  
+  // Extract numeric portions for natural sorting
+  const ax = a.toString().replace(/(\d+)/g, (m) => m.padStart(10, '0'));
+  const bx = b.toString().replace(/(\d+)/g, (m) => m.padStart(10, '0'));
+  
+  return ax.localeCompare(bx);
 }
 
 const GridContainer: React.FC<ExtendedGridContainerProps> = ({
@@ -31,6 +59,7 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   const [gridPositions, setGridPositions] = useState<Map<string, { row: number, col: number }>>(new Map());
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [selectedGridId, setSelectedGridId] = useState<string | null>(null);
+  const [focusedGridId, setFocusedGridId] = useState<string | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [forceRecalculation, setForceRecalculation] = useState(0);
 
@@ -45,19 +74,13 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
       
       // Calculate how many columns and rows can fit in the viewport
       const maxColumns = Math.floor((viewportWidth - 60) / gridSize); // Add some padding
-      const maxRows = Math.floor((viewportHeight - 300) / gridSize); // Subtract header/footer space
       
       // Set the dynamic columns (use a minimum to avoid too few columns)
       const optimalColumns = Math.max(4, Math.min(maxColumns, GRID_CONFIG.BREAKPOINTS.lg.columns));
       setDynamicColumns(optimalColumns);
       
-      // Calculate how many grids should be visible based on available space
-      // Show all grids by default, but limit to what can fit on screen if needed
-      const totalGrids = containerSize;
-      const visibleRows = Math.ceil(totalGrids / optimalColumns);
-      
-      // Ensure we display at least the first 100 grids
-      setVisibleGrids(Math.max(100, totalGrids));
+      // Always show all grids
+      setVisibleGrids(containerSize);
     };
 
     // Calculate on mount and when window resizes
@@ -73,10 +96,13 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
   useEffect(() => {
     const newPositions = new Map<string, { row: number, col: number }>();
     
-    // Sort grids by ID
-    const sortedGrids = [...grids].sort((a, b) => a.id.localeCompare(b.id));
+    // Make sure we use all grids by getting the maximum between visibleGrids and actual grid count
+    const totalGridsToShow = Math.max(visibleGrids, grids.length);
     
-    for (let i = 0; i < visibleGrids; i++) {
+    // Apply natural sort to grid IDs
+    const sortedGrids = [...grids].sort((a, b) => naturalSort(a.id, b.id));
+    
+    for (let i = 0; i < totalGridsToShow; i++) {
       const gridId = i < sortedGrids.length ? sortedGrids[i].id : `grid-${i}`;
       const row = Math.floor(i / dynamicColumns);
       const col = i % dynamicColumns;
@@ -200,18 +226,16 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     
     // Remove modal open class and add closing class temporarily
     document.body.classList.remove('modal-open');
-    document.body.classList.add('modal-closing');
     
-    // Clear expanded grid state
-    setExpandedGrid(null);
+    // Don't add modal-closing class or force recalculation
+    // These were causing all grids to collapse when canceling the modal
     
-    // Force recalculation of grid positions and perimeter status
-    setForceRecalculation(prev => prev + 1);
-    
-    // Remove closing class after transition
+    // Wait for a short timeout before allowing new grid interactions
     setTimeout(() => {
+      // Instead of forcing recalculation which resets all grids,
+      // we'll just ensure the body is ready for new interactions
       document.body.classList.remove('modal-closing');
-    }, 500);
+    }, 300);
   };
 
   const getTransformOriginForGrid = (gridId: string) => {
@@ -241,6 +265,48 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
     margin: '0 auto',
   };
 
+  // Handle keyboard navigation between grid items
+  const handleKeyboardNavigation = (direction: 'up' | 'down' | 'left' | 'right', gridId: string) => {
+    const position = gridPositions.get(gridId);
+    if (!position) return;
+    
+    const { row, col } = position;
+    let newRow = row;
+    let newCol = col;
+    
+    switch (direction) {
+      case 'up':
+        newRow = Math.max(0, row - 1);
+        break;
+      case 'down':
+        newRow = Math.min(Math.floor((visibleGrids - 1) / dynamicColumns), row + 1);
+        break;
+      case 'left':
+        newCol = Math.max(0, col - 1);
+        break;
+      case 'right':
+        newCol = Math.min(dynamicColumns - 1, col + 1);
+        break;
+    }
+    
+    // Find the grid at the new position
+    const sortedGrids = [...grids].sort((a, b) => naturalSort(a.id, b.id));
+    const targetIndex = newRow * dynamicColumns + newCol;
+    
+    if (targetIndex < sortedGrids.length) {
+      const targetGridId = sortedGrids[targetIndex].id;
+      setFocusedGridId(targetGridId);
+      
+      // Focus the grid element
+      setTimeout(() => {
+        const gridElement = document.querySelector(`[data-grid-id="${targetGridId}"]`) as HTMLElement;
+        if (gridElement) {
+          gridElement.focus();
+        }
+      }, 0);
+    }
+  };
+
   return (
     <div ref={containerRef} className="w-full">
       {isPurchaseModalOpen && selectedGridId && (
@@ -257,9 +323,12 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
         style={{
           gridTemplateColumns: `repeat(${dynamicColumns}, minmax(0, 1fr))`,
         }}
+        role="grid"
+        aria-label="Grid container"
       >
-        {grids?.map((grid, index) => (
-          index < visibleGrids && (
+        {[...grids]
+          .sort((a, b) => naturalSort(a.id, b.id))
+          .map((grid) => (
             <GridItem
               key={grid.id}
               id={grid.id}
@@ -276,9 +345,13 @@ const GridContainer: React.FC<ExtendedGridContainerProps> = ({
               onHoverStateChange={handleGridHoverStateChange}
               perimeterInfo={getPerimeterInfo(grid.id)}
               forceRecalculation={forceRecalculation}
+              onKeyboardNavigation={handleKeyboardNavigation}
+              tabIndex={0}
+              isFocused={focusedGridId === grid.id}
+              data-grid-id={grid.id}
             />
-          )
-        ))}
+          ))
+        }
       </div>
     </div>
   );

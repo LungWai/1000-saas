@@ -96,12 +96,12 @@ export default function PurchaseModal({
 
   return (
     <div className="purchase-modal-overlay">
-      <div className="purchase-modal">
+      <div className="purchase-modal bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Lease {displayTitle}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Email Address
             </label>
             <input
@@ -110,13 +110,13 @@ export default function PurchaseModal({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border-border bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Billing Cycle
             </label>
             <div className="mt-2 space-y-2">
@@ -128,7 +128,7 @@ export default function PurchaseModal({
                   onChange={(e) => setBillingCycle(e.target.value as 'monthly')}
                   className="mr-2 text-primary"
                 />
-                Monthly (${price.toFixed(2)}/month)
+                <span className="text-gray-900 dark:text-gray-100">Monthly (${price.toFixed(2)}/month)</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -138,7 +138,7 @@ export default function PurchaseModal({
                   onChange={(e) => setBillingCycle(e.target.value as 'quarterly')}
                   className="mr-2 text-primary"
                 />
-                Quarterly (${(price * 3 * 0.95).toFixed(2)}/quarter - Save 5%)
+                <span className="text-gray-900 dark:text-gray-100">Quarterly (${(price * 3 * 0.95).toFixed(2)}/quarter - Save 5%)</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -148,16 +148,16 @@ export default function PurchaseModal({
                   onChange={(e) => setBillingCycle(e.target.value as 'yearly')}
                   className="mr-2 text-primary"
                 />
-                Yearly (${(price * 12 * 0.85).toFixed(2)}/year - Save 15%)
+                <span className="text-gray-900 dark:text-gray-100">Yearly (${(price * 12 * 0.85).toFixed(2)}/year - Save 15%)</span>
               </label>
             </div>
           </div>
           
           {/* Collapsible section about editing capabilities */}
-          <div className="mt-4 bg-background/50 rounded-md p-3 border border-border">
+          <div className="mt-4 bg-gray-50 dark:bg-gray-700/50 rounded-md p-3 border border-gray-200 dark:border-gray-600">
             <button
               type="button"
-              className="flex justify-between items-center w-full text-left text-sm font-medium"
+              className="flex justify-between items-center w-full text-left text-sm font-medium text-gray-900 dark:text-gray-100"
               onClick={() => setShowEditInfo(!showEditInfo)}
             >
               <span>What can I customize after purchase?</span>
@@ -172,7 +172,7 @@ export default function PurchaseModal({
             </button>
             
             {showEditInfo && (
-              <div className="mt-2 text-sm text-muted-foreground">
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                 <p className="mb-2">After purchasing, you'll be able to customize your grid with:</p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Custom title (up to 50 characters)</li>
@@ -195,14 +195,14 @@ export default function PurchaseModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Continue to Payment'}
             </button>

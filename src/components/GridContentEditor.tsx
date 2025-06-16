@@ -286,7 +286,7 @@ export default function GridContentEditor({
         {/* Left Column - Text Fields */}
         <div className="w-full md:w-1/2 space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Title
             </label>
             <input
@@ -295,15 +295,15 @@ export default function GridContentEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {title.length}/{CONTENT_LIMITS.TEXT.TITLE_MAX_LENGTH} characters
             </p>
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Description
             </label>
             <textarea
@@ -312,15 +312,15 @@ export default function GridContentEditor({
               onChange={(e) => setDescription(e.target.value)}
               maxLength={CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH}
               rows={3}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {description.length}/{CONTENT_LIMITS.TEXT.DESCRIPTION_MAX_LENGTH} characters
             </p>
           </div>
 
           <div>
-            <label htmlFor="externalUrl" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="externalUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               External URL
             </label>
             <input
@@ -330,9 +330,9 @@ export default function GridContentEditor({
               onChange={(e) => setExternalUrl(e.target.value)}
               pattern="https://.*"
               placeholder="https://"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Must start with https://
             </p>
           </div>
@@ -340,13 +340,13 @@ export default function GridContentEditor({
 
         {/* Right Column - Image Upload */}
         <div className="w-full md:w-1/2 mt-6 md:mt-0">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Image
           </label>
           <div 
             className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer h-48 ${
-              isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-indigo-400'
-            }`}
+              isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-400'
+            } bg-white dark:bg-gray-800`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -369,7 +369,7 @@ export default function GridContentEditor({
                   className="max-h-32 max-w-full object-contain rounded-md mb-2"
                   key={previewImage}
                 />
-                <p className="text-sm text-gray-500">Click or drag to replace</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Click or drag to replace</p>
                 {fileToUpload && (
                   <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                     New
@@ -379,17 +379,17 @@ export default function GridContentEditor({
             ) : (
               <div className="text-center">
                 <Upload className="mx-auto h-10 w-10 text-gray-400" />
-                <p className="mt-2 text-sm font-medium">
+                <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   {loading ? 'Uploading...' : 'Drag & drop or click to upload'}
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Max size: {CONTENT_LIMITS.IMAGE.MAX_SIZE_MB}MB. Supported formats: JPG, PNG, GIF
                 </p>
               </div>
             )}
           </div>
           
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             {fileToUpload ? 'Image will be uploaded when you save changes.' : 'Your image will be stored in a secure Supabase bucket.'}
           </p>
         </div>
@@ -406,7 +406,7 @@ export default function GridContentEditor({
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50"
         >
           {loading ? 'Saving...' : 'Save Changes'}
         </button>
