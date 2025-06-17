@@ -195,10 +195,9 @@ export default function Home() {
         <section className={`w-full transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="max-w-[800px] mx-auto px-8 text-center py-5">
             <div className="bg-card/20 backdrop-blur-md rounded-lg p-6">
-              <h2 className="text-2xl font-bold tracking-tight mb-3 text-foreground">Discover Your SaaS Space</h2>
+              <h2 className="text-2xl font-bold tracking-tight mb-3 text-foreground">Explore Premium Space for SaaS advertising</h2>
               <p className="text-base text-foreground leading-relaxed max-w-[400px] mx-auto">
-                Explore premium digital real estate tailored for SaaS advertising
-              </p>
+                We allocated 80% of our subscription revenue to advertising on social media platforms, including YouTube, Meta, X, and TikTok.              </p>
             </div>
           </div>
         </section>
