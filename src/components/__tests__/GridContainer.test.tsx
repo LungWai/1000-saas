@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import GridContainer from '../GridContainer';
 import { GRID_CONFIG } from '@/lib/constants';
@@ -71,41 +71,51 @@ describe('GridContainer Component', () => {
 
   it('shows purchase modal when a grid is clicked', async () => {
     render(
-      <GridContainer 
-        grids={mockGrids} 
-        containerSize={mockGrids.length} 
-        columns={3} 
-        onPurchaseClick={mockOnPurchaseClick} 
+      <GridContainer
+        grids={mockGrids}
+        containerSize={mockGrids.length}
+        columns={3}
+        onPurchaseClick={mockOnPurchaseClick}
       />
     );
-    
+
     // Click the first grid
     await userEvent.click(screen.getByTestId('grid-1'));
-    
+
+    // Wait for the modal to appear (there's a 300ms delay in the component)
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 350));
+    });
+
     // Modal should appear
     expect(screen.getByTestId('purchase-modal')).toBeInTheDocument();
     expect(screen.getByTestId('purchase-modal')).toHaveAttribute('data-grid-id', '1');
-    
+
     // onPurchaseClick should be called
     expect(mockOnPurchaseClick).toHaveBeenCalledWith('1');
   });
 
   it('closes purchase modal correctly', async () => {
     render(
-      <GridContainer 
-        grids={mockGrids} 
-        containerSize={mockGrids.length} 
-        columns={3} 
-        onPurchaseClick={mockOnPurchaseClick} 
+      <GridContainer
+        grids={mockGrids}
+        containerSize={mockGrids.length}
+        columns={3}
+        onPurchaseClick={mockOnPurchaseClick}
       />
     );
-    
+
     // Click the first grid to open modal
     await userEvent.click(screen.getByTestId('grid-1'));
-    
+
+    // Wait for the modal to appear
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 350));
+    });
+
     // Close the modal
     await userEvent.click(screen.getByText('Close'));
-    
+
     // Modal should be closed
     expect(screen.queryByTestId('purchase-modal')).not.toBeInTheDocument();
   });
@@ -203,10 +213,12 @@ describe('GridContainer Component', () => {
     
     // Get the internal handler via the __mocks__ prop from the mock
     const gridItemProps = require('../GridItem').mock.calls[0][0];
-    
-    // Call the hover handler directly
-    gridItemProps.onHoverStateChange('1', true, mockElement);
-    
+
+    // Call the hover handler directly wrapped in act
+    act(() => {
+      gridItemProps.onHoverStateChange('1', true, mockElement);
+    });
+
     // No assertions here, just checking it doesn't throw
   });
 }); 

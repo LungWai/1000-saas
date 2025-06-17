@@ -1,16 +1,13 @@
-import '@testing-library/jest-dom';
+// Setup for Node.js environment tests (API routes)
 
-// Mock Service Worker setup
-import { server } from './src/mocks/server';
-
-// Mock fetch globally
+// Mock fetch for Node.js environment
 global.fetch = jest.fn();
 
 // Mock Next.js globals for API route testing
 global.Request = jest.fn().mockImplementation((url, options) => ({
   url,
   method: options?.method || 'GET',
-  headers: new Headers(options?.headers),
+  headers: new Map(Object.entries(options?.headers || {})),
   json: jest.fn().mockResolvedValue({}),
   text: jest.fn().mockResolvedValue(''),
 }));
@@ -18,12 +15,11 @@ global.Request = jest.fn().mockImplementation((url, options) => ({
 global.Response = jest.fn().mockImplementation((body, options) => ({
   status: options?.status || 200,
   statusText: options?.statusText || 'OK',
-  headers: new Headers(options?.headers),
+  headers: new Map(Object.entries(options?.headers || {})),
   json: jest.fn().mockResolvedValue(body),
   text: jest.fn().mockResolvedValue(body),
 }));
 
-// Mock Headers
 global.Headers = jest.fn().mockImplementation((init) => {
   const headers = new Map();
   if (init) {
@@ -31,17 +27,11 @@ global.Headers = jest.fn().mockImplementation((init) => {
       headers.set(key.toLowerCase(), value);
     });
   }
-  return {
-    get: (name) => headers.get(name.toLowerCase()),
-    set: (name, value) => headers.set(name.toLowerCase(), value),
-    has: (name) => headers.has(name.toLowerCase()),
-    delete: (name) => headers.delete(name.toLowerCase()),
-    entries: () => headers.entries(),
-    keys: () => headers.keys(),
-    values: () => headers.values(),
-    forEach: (callback) => headers.forEach(callback),
-  };
+  return headers;
 });
+
+// Mock Service Worker setup for Node environment
+const { server } = require('./src/mocks/server');
 
 beforeAll(() => server.listen());
 afterEach(() => {

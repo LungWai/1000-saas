@@ -17,9 +17,6 @@ jest.mock('@/hooks/useToastNotification', () => {
   });
 });
 
-// Mock fetch function
-global.fetch = jest.fn();
-
 // Mock router
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
