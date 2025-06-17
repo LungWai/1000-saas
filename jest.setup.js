@@ -3,45 +3,47 @@ import '@testing-library/jest-dom';
 // Mock Service Worker setup
 import { server } from './src/mocks/server';
 
-// Mock fetch globally
-global.fetch = jest.fn();
+// Mock fetch globally with proper Jest mock methods
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+  })
+);
 
-// Mock Next.js globals for API route testing
-global.Request = jest.fn().mockImplementation((url, options) => ({
-  url,
-  method: options?.method || 'GET',
-  headers: new Headers(options?.headers),
-  json: jest.fn().mockResolvedValue({}),
-  text: jest.fn().mockResolvedValue(''),
-}));
+// Detect if we're in a Node.js environment (for API tests)
+const isNodeEnvironment = typeof window === 'undefined';
 
-global.Response = jest.fn().mockImplementation((body, options) => ({
-  status: options?.status || 200,
-  statusText: options?.statusText || 'OK',
-  headers: new Headers(options?.headers),
-  json: jest.fn().mockResolvedValue(body),
-  text: jest.fn().mockResolvedValue(body),
-}));
+if (isNodeEnvironment) {
+  // Mock Next.js globals for API route testing in Node environment
+  global.Request = jest.fn().mockImplementation((url, options) => ({
+    url,
+    method: options?.method || 'GET',
+    headers: new Map(Object.entries(options?.headers || {})),
+    json: jest.fn().mockResolvedValue({}),
+    text: jest.fn().mockResolvedValue(''),
+  }));
 
-// Mock Headers
-global.Headers = jest.fn().mockImplementation((init) => {
-  const headers = new Map();
-  if (init) {
-    Object.entries(init).forEach(([key, value]) => {
-      headers.set(key.toLowerCase(), value);
-    });
-  }
-  return {
-    get: (name) => headers.get(name.toLowerCase()),
-    set: (name, value) => headers.set(name.toLowerCase(), value),
-    has: (name) => headers.has(name.toLowerCase()),
-    delete: (name) => headers.delete(name.toLowerCase()),
-    entries: () => headers.entries(),
-    keys: () => headers.keys(),
-    values: () => headers.values(),
-    forEach: (callback) => headers.forEach(callback),
-  };
-});
+  global.Response = jest.fn().mockImplementation((body, options) => ({
+    status: options?.status || 200,
+    statusText: options?.statusText || 'OK',
+    headers: new Map(Object.entries(options?.headers || {})),
+    json: jest.fn().mockResolvedValue(body),
+    text: jest.fn().mockResolvedValue(body),
+  }));
+
+  global.Headers = jest.fn().mockImplementation((init) => {
+    const headers = new Map();
+    if (init) {
+      Object.entries(init).forEach(([key, value]) => {
+        headers.set(key.toLowerCase(), value);
+      });
+    }
+    return headers;
+  });
+}
 
 beforeAll(() => server.listen());
 afterEach(() => {

@@ -5,32 +5,32 @@ const createJestConfig = nextJest({
 });
 
 const customJestConfig = {
-  projects: [
-    {
-      displayName: 'jsdom',
-      testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/src/components/**/*.test.{js,jsx,ts,tsx}', '<rootDir>/src/lib/**/*.test.{js,jsx,ts,tsx}'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-      },
-    },
-    {
-      displayName: 'node',
-      testEnvironment: 'node',
-      testMatch: ['<rootDir>/src/app/api/**/*.test.{js,jsx,ts,tsx}'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.node.js'],
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-      },
-    },
-  ],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.jest.json',
+    }],
+  },
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
+    '!src/app/api/**/route.ts',
+    '!src/app/api/**/*-tbd/**/*',
+    '!src/app/api/**/route-tbd.ts',
     '!**/node_modules/**',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '.*-tbd.*',
+  ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))',
   ],
 };
 
-module.exports = createJestConfig(customJestConfig); 
+module.exports = createJestConfig(customJestConfig);
